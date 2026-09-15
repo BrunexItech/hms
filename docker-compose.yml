@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-hms}
+      POSTGRES_USER: ${DB_USER:-hms}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in backend/.env}
+    ports:
+      - "5433:5432"
+    volumes:
+      - hms_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-hms} -d ${DB_NAME:-hms}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  hms_postgres_data:

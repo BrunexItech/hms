@@ -1,0 +1,21 @@
+# Secrets — never commit real .env files
+.env
+backend/.env
+frontend/.env.local
+
+# Python
+backend/venv/
+backend/__pycache__/
+**/__pycache__/
+*.pyc
+
+# Node / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# OS / editor
+.DS_Store
+*.swp
+
+# Docker volumes are managed by Docker itself, nothing to ignore here

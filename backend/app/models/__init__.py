@@ -4,6 +4,7 @@ from app.models.complaint import Complaint, ComplaintPriority, ComplaintStatus
 from app.models.module import Module, OrganizationModule
 from app.models.organization import Organization
 from app.models.property import Property
+from app.models.rent import RentInvoice, RentPayment
 from app.models.staff_user import StaffRole, StaffUser
 from app.models.tenancy import Tenancy, TenancyStatus
 from app.models.tenant import Tenant
@@ -21,6 +22,8 @@ __all__ = [
     "OrganizationModule",
     "Organization",
     "Property",
+    "RentInvoice",
+    "RentPayment",
     "StaffRole",
     "StaffUser",
     "Tenancy",

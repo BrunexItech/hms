@@ -128,3 +128,82 @@ export interface UnitAccessInfo {
   organization_logo_url: string | null;
   organization_primary_color: string;
 }
+
+export interface StaffMember {
+  id: string;
+  email: string;
+  full_name: string;
+  role: StaffRole;
+  is_active: boolean;
+  mfa_enabled: boolean;
+  created_at: string;
+}
+
+export type RentInvoiceStatus = "pending" | "partially_paid" | "paid" | "overdue";
+
+export interface RentPayment {
+  id: string;
+  amount: number;
+  method: string;
+  paid_at: string;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface RentInvoice {
+  id: string;
+  unit_id: string;
+  unit_name: string;
+  property_name: string;
+  tenant_name: string;
+  period_start: string;
+  period_end: string;
+  amount_due: number;
+  due_date: string;
+  total_paid: number;
+  status: RentInvoiceStatus;
+  payments: RentPayment[];
+  created_at: string;
+}
+
+export interface MonthlyRevenuePoint {
+  month: string;
+  collected: number;
+}
+
+export interface DashboardSummary {
+  properties_enabled: boolean;
+  total_properties?: number | null;
+  total_units?: number | null;
+  occupied_units?: number | null;
+  vacant_units?: number | null;
+  occupancy_rate?: number | null;
+
+  tenants_enabled: boolean;
+  active_tenants?: number | null;
+
+  complaints_enabled: boolean;
+  open_complaints?: number | null;
+
+  visitor_booking_enabled: boolean;
+  pending_visitors?: number | null;
+
+  rent_enabled: boolean;
+  rent_due_this_month?: number | null;
+  rent_collected_this_month?: number | null;
+  rent_outstanding?: number | null;
+  monthly_revenue?: MonthlyRevenuePoint[] | null;
+
+  utilities_enabled: boolean;
+  utilities_outstanding?: number | null;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  organization_id: string | null;
+  actor_type: string;
+  actor_id: string | null;
+  action: string;
+  meta: Record<string, unknown> | null;
+  created_at: string;
+}

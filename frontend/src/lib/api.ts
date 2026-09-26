@@ -1,5 +1,7 @@
 import { API_BASE_URL } from "./config";
-import { Audience, clearTokens, getTokens, saveTokens } from "./auth-storage";
+import { getCsrfToken } from "./csrf";
+
+export type Audience = "staff" | "tenant";
 
 export class ApiError extends Error {
   status: number;
@@ -20,21 +22,14 @@ function extractMessage(body: unknown, fallback: string): string {
   return fallback;
 }
 
+const MUTATING = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
 async function refresh(audience: Audience): Promise<boolean> {
-  const tokens = getTokens(audience);
-  if (!tokens) return false;
   const res = await fetch(`${API_BASE_URL}/auth/${audience}/refresh`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refresh_token: tokens.refresh_token }),
+    credentials: "include",
   });
-  if (!res.ok) {
-    clearTokens(audience);
-    return false;
-  }
-  const data = await res.json();
-  saveTokens(audience, data);
-  return true;
+  return res.ok;
 }
 
 interface RequestOptions extends RequestInit {
@@ -42,17 +37,18 @@ interface RequestOptions extends RequestInit {
 }
 
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { auth = "none", headers, ...rest } = options;
+  const { auth = "none", headers, method = "GET", ...rest } = options;
+
   const doFetch = async (): Promise<Response> => {
     const finalHeaders: Record<string, string> = {
       "Content-Type": "application/json",
       ...(headers as Record<string, string>),
     };
-    if (auth !== "none") {
-      const tokens = getTokens(auth);
-      if (tokens) finalHeaders["Authorization"] = `Bearer ${tokens.access_token}`;
+    if (MUTATING.has(method.toUpperCase())) {
+      const csrf = getCsrfToken();
+      if (csrf) finalHeaders["X-CSRF-Token"] = csrf;
     }
-    return fetch(`${API_BASE_URL}${path}`, { ...rest, headers: finalHeaders });
+    return fetch(`${API_BASE_URL}${path}`, { ...rest, method, headers: finalHeaders, credentials: "include" });
   };
 
   let res = await doFetch();

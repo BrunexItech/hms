@@ -1,14 +1,13 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Mail, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Label, PasswordInput } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { staffLogin, getStaffMe } from "@/lib/endpoints";
+import { staffLogin, staffLogout } from "@/lib/endpoints";
 import { ApiError } from "@/lib/api";
-import { clearTokens } from "@/lib/auth-storage";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -18,16 +17,19 @@ export default function AdminLoginPage() {
   const [needsMfa, setNeedsMfa] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Block submits until hydrated so an early click can never fall back to a
+  // native form submit (which would put the password in the URL).
+  const [interactive, setInteractive] = useState(false);
+  useEffect(() => setInteractive(true), []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      await staffLogin(email, password, needsMfa ? mfaCode : undefined);
-      const me = await getStaffMe();
+      const me = await staffLogin(email, password, needsMfa ? mfaCode : undefined);
       if (me.role !== "super_admin") {
-        clearTokens("staff");
+        await staffLogout();
         setError("This sign-in is for platform administrators only. Use /login instead.");
         return;
       }
@@ -118,7 +120,7 @@ export default function AdminLoginPage() {
 
             {error && <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">{error}</p>}
 
-            <Button type="submit" variant="secondary" className="w-full border border-border" loading={loading}>
+            <Button type="submit" variant="secondary" className="w-full border border-border" disabled={!interactive} loading={loading}>
               Sign in
             </Button>
           </form>

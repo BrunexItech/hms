@@ -16,6 +16,7 @@ export default function TenantAccessPage({ params }: PageProps<"/access/[slug]">
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [devMagicLink, setDevMagicLink] = useState<string | null>(null);
 
   useEffect(() => {
     getUnitAccessInfo(slug)
@@ -27,7 +28,8 @@ export default function TenantAccessPage({ params }: PageProps<"/access/[slug]">
     e.preventDefault();
     setLoading(true);
     try {
-      await requestTenantAccessLink(slug, email);
+      const res = await requestTenantAccessLink(slug, email);
+      setDevMagicLink(res.dev_magic_link ?? null);
       setSent(true);
     } finally {
       setLoading(false);
@@ -76,6 +78,16 @@ export default function TenantAccessPage({ params }: PageProps<"/access/[slug]">
                   If that email is registered for this unit, a secure one-time sign-in link is on its way. It
                   expires in 10 minutes.
                 </p>
+                {devMagicLink && (
+                  <div className="mt-4 w-full rounded-lg border border-warning/30 bg-warning-bg p-3 text-left">
+                    <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-warning">
+                      Development mode — no email provider configured
+                    </p>
+                    <a href={devMagicLink} className="break-all text-xs text-foreground underline underline-offset-2">
+                      {devMagicLink}
+                    </a>
+                  </div>
+                )}
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">

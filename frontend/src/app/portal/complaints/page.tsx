@@ -55,31 +55,28 @@ export default function TenantComplaintsPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Complaints</h1>
-          <p className="text-sm text-muted">Report a maintenance issue in your unit.</p>
-        </div>
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="h-4 w-4" /> New complaint
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h1 className="text-[15px] font-semibold text-foreground">Complaints</h1>
+        <Button size="sm" onClick={() => setOpen(true)}>
+          <Plus className="h-3.5 w-3.5" /> New complaint
         </Button>
       </div>
 
       {complaints.length === 0 ? (
         <Card className="flex flex-col items-center py-16 text-center">
-          <MessageSquareWarning className="mb-3 h-10 w-10 text-muted" />
-          <p className="font-medium text-foreground">No complaints yet</p>
+          <MessageSquareWarning className="mb-3 h-8 w-8 text-muted" />
+          <p className="text-sm font-medium text-foreground">No complaints yet</p>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {complaints.map((c) => (
-            <Card key={c.id}>
+            <Card key={c.id} className="p-4">
               <div className="mb-1 flex items-center justify-between gap-2">
-                <p className="font-semibold text-foreground">{c.subject}</p>
+                <p className="text-[13.5px] font-semibold text-foreground">{c.subject}</p>
                 <Badge tone={statusTone[c.status]}>{c.status.replace("_", " ")}</Badge>
               </div>
-              <p className="text-sm text-muted">{c.description}</p>
-              <p className="mt-2 text-xs text-muted">{new Date(c.created_at).toLocaleDateString()}</p>
+              <p className="text-[13px] text-muted">{c.description}</p>
+              <p className="mt-1.5 text-[12px] text-muted">{new Date(c.created_at).toLocaleDateString()}</p>
             </Card>
           ))}
         </div>

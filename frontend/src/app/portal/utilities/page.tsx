@@ -25,29 +25,28 @@ export default function TenantUtilitiesPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-semibold text-foreground">Utility bills</h1>
-      <p className="mb-6 text-sm text-muted">Water, electricity and other charges for your unit.</p>
+      <h1 className="mb-4 text-[15px] font-semibold text-foreground">Utility bills</h1>
 
       {bills.length === 0 ? (
         <Card className="flex flex-col items-center py-16 text-center">
-          <Receipt className="mb-3 h-10 w-10 text-muted" />
-          <p className="font-medium text-foreground">No bills yet</p>
+          <Receipt className="mb-3 h-8 w-8 text-muted" />
+          <p className="text-sm font-medium text-foreground">No bills yet</p>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="premium-card divide-y divide-border overflow-hidden p-0">
           {bills.map((b) => (
-            <Card key={b.id} className="flex items-center justify-between gap-3">
-              <div>
-                <p className="font-semibold capitalize text-foreground">{b.utility_type}</p>
-                <p className="text-xs text-muted">
+            <div key={b.id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-[13.5px] font-medium capitalize text-foreground">{b.utility_type}</p>
+                <p className="text-[12px] text-muted">
                   {b.period_start} – {b.period_end}
                 </p>
               </div>
-              <div className="text-right">
-                <p className="font-semibold text-foreground">{b.amount.toLocaleString()}</p>
+              <div className="flex shrink-0 items-center gap-3">
+                <p className="text-[13.5px] font-semibold tabular-nums text-foreground">{b.amount.toLocaleString()}</p>
                 <Badge tone={statusTone[b.status]}>{b.status}</Badge>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       )}

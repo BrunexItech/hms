@@ -1,13 +1,17 @@
 from fastapi import APIRouter
 
 from app.api.routes import (
+    audit_logs,
     auth_staff,
     auth_tenant,
     complaints,
+    dashboard,
     modules,
     organizations,
     properties,
     public,
+    rent,
+    staff,
     tenancies,
     units,
     utilities,
@@ -26,3 +30,7 @@ api_router.include_router(modules.router)
 api_router.include_router(complaints.router)
 api_router.include_router(visitors.router)
 api_router.include_router(utilities.router)
+api_router.include_router(rent.router)
+api_router.include_router(staff.router)
+api_router.include_router(audit_logs.router)
+api_router.include_router(dashboard.router)

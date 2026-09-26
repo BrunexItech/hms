@@ -1,11 +1,14 @@
 import { apiFetch } from "./api";
-import { saveTokens } from "./auth-storage";
 import {
+  AuditLogEntry,
   Complaint,
+  DashboardSummary,
   ModuleInfo,
   Organization,
   Property,
+  RentInvoice,
   StaffMe,
+  StaffMember,
   Tenancy,
   TenantMe,
   Unit,
@@ -14,23 +17,28 @@ import {
   VisitorBooking,
 } from "./types";
 
-interface TokenPair {
-  access_token: string;
-  refresh_token: string;
-}
-
 // ── Auth ──────────────────────────────────────────────────────────────
-export async function staffLogin(email: string, password: string, mfa_code?: string) {
-  const tokens = await apiFetch<TokenPair>("/auth/staff/login", {
+export function staffLogin(email: string, password: string, mfa_code?: string) {
+  return apiFetch<StaffMe>("/auth/staff/login", {
     method: "POST",
     body: JSON.stringify({ email, password, mfa_code }),
   });
-  saveTokens("staff", tokens);
-  return tokens;
+}
+
+export function staffLogout() {
+  return apiFetch<{ message: string }>("/auth/staff/logout", { method: "POST", auth: "staff" });
 }
 
 export function getStaffMe() {
   return apiFetch<StaffMe>("/auth/staff/me", { auth: "staff" });
+}
+
+export function changePassword(current_password: string, new_password: string) {
+  return apiFetch<{ message: string }>("/auth/staff/change-password", {
+    method: "POST",
+    auth: "staff",
+    body: JSON.stringify({ current_password, new_password }),
+  });
 }
 
 export function getUnitAccessInfo(accessSlug: string) {
@@ -38,27 +46,25 @@ export function getUnitAccessInfo(accessSlug: string) {
 }
 
 export function requestTenantAccessLink(accessSlug: string, email: string) {
-  return apiFetch<{ message: string }>(`/auth/tenant/${accessSlug}/request`, {
+  return apiFetch<{ message: string; dev_magic_link?: string }>(`/auth/tenant/${accessSlug}/request`, {
     method: "POST",
     body: JSON.stringify({ email }),
   });
 }
 
-export async function verifyTenantAccessToken(token: string) {
-  const tokens = await apiFetch<TokenPair>("/auth/tenant/verify", {
+export function verifyTenantAccessToken(token: string) {
+  return apiFetch<TenantMe>("/auth/tenant/verify", {
     method: "POST",
     body: JSON.stringify({ token }),
   });
-  saveTokens("tenant", tokens);
-  return tokens;
+}
+
+export function tenantLogout() {
+  return apiFetch<{ message: string }>("/auth/tenant/logout", { method: "POST", auth: "tenant" });
 }
 
 export function getTenantMe() {
   return apiFetch<TenantMe>("/auth/tenant/me", { auth: "tenant" });
-}
-
-export function getTenantModules() {
-  return apiFetch<ModuleInfo[]>("/modules/tenant-me", { auth: "tenant" });
 }
 
 // ── Organizations (super admin) ─────────────────────────────────────
@@ -101,6 +107,10 @@ export function toggleOrgModule(orgId: string, moduleId: string, enabled: boolea
   });
 }
 
+export function listOrgAuditLogs(orgId: string) {
+  return apiFetch<AuditLogEntry[]>(`/organizations/${orgId}/audit-logs`, { auth: "staff" });
+}
+
 export function getMyOrganization() {
   return apiFetch<Organization>("/organizations/me", { auth: "staff" });
 }
@@ -109,9 +119,47 @@ export function updateMyOrganization(payload: { name?: string; logo_url?: string
   return apiFetch<Organization>("/organizations/me", { method: "PATCH", auth: "staff", body: JSON.stringify(payload) });
 }
 
+export function getMyAuditLogs() {
+  return apiFetch<AuditLogEntry[]>("/audit-logs/me", { auth: "staff" });
+}
+
 // ── My organization's modules (sidebar gating) ──────────────────────
 export function getMyModules() {
   return apiFetch<ModuleInfo[]>("/modules/me", { auth: "staff" });
+}
+
+export function getTenantModules() {
+  return apiFetch<ModuleInfo[]>("/modules/tenant-me", { auth: "tenant" });
+}
+
+// ── Dashboard ────────────────────────────────────────────────────────
+export function getDashboardSummary() {
+  return apiFetch<DashboardSummary>("/staff/dashboard/summary", { auth: "staff" });
+}
+
+// ── Team / staff management ─────────────────────────────────────────
+export function listStaff() {
+  return apiFetch<StaffMember[]>("/staff", { auth: "staff" });
+}
+
+export function inviteStaff(payload: { full_name: string; email: string; password: string }) {
+  return apiFetch<StaffMember>("/staff", { method: "POST", auth: "staff", body: JSON.stringify(payload) });
+}
+
+export function deactivateStaff(memberId: string) {
+  return apiFetch<StaffMember>(`/staff/${memberId}/deactivate`, { method: "POST", auth: "staff" });
+}
+
+export function resetStaffPassword(memberId: string, password: string) {
+  return apiFetch<StaffMember>(`/staff/${memberId}/reset-password`, {
+    method: "POST",
+    auth: "staff",
+    body: JSON.stringify({ password }),
+  });
+}
+
+export function reactivateStaff(memberId: string) {
+  return apiFetch<StaffMember>(`/staff/${memberId}/reactivate`, { method: "POST", auth: "staff" });
 }
 
 // ── Properties / Units ───────────────────────────────────────────────
@@ -246,6 +294,55 @@ export function createUtilityBill(payload: {
   return apiFetch<UtilityBill>("/staff/utility-bills", { method: "POST", auth: "staff", body: JSON.stringify(payload) });
 }
 
+export function bulkCreateUtilityBills(payload: {
+  property_id: string;
+  utility_type: string;
+  period_start: string;
+  period_end: string;
+  amount: number;
+}) {
+  return apiFetch<UtilityBill[]>("/staff/utility-bills/bulk", { method: "POST", auth: "staff", body: JSON.stringify(payload) });
+}
+
+export function updateUtilityBillStatus(id: string, status: UtilityBill["status"]) {
+  return apiFetch<UtilityBill>(`/staff/utility-bills/${id}`, {
+    method: "PATCH",
+    auth: "staff",
+    body: JSON.stringify({ status }),
+  });
+}
+
 export function listTenantUtilityBills() {
   return apiFetch<UtilityBill[]>("/tenant/utility-bills", { auth: "tenant" });
+}
+
+// ── Rent & payments ──────────────────────────────────────────────────
+export function listStaffRentInvoices() {
+  return apiFetch<RentInvoice[]>("/staff/rent-invoices", { auth: "staff" });
+}
+
+export function createRentInvoice(payload: { unit_id: string; period_start: string; period_end: string; amount_due: number; due_date: string }) {
+  return apiFetch<RentInvoice>("/staff/rent-invoices", { method: "POST", auth: "staff", body: JSON.stringify(payload) });
+}
+
+export function bulkCreateRentInvoices(payload: {
+  property_id: string;
+  period_start: string;
+  period_end: string;
+  amount_due: number;
+  due_date: string;
+}) {
+  return apiFetch<RentInvoice[]>("/staff/rent-invoices/bulk", { method: "POST", auth: "staff", body: JSON.stringify(payload) });
+}
+
+export function recordRentPayment(invoiceId: string, payload: { amount: number; method: string; paid_at: string; notes?: string }) {
+  return apiFetch<RentInvoice>(`/staff/rent-invoices/${invoiceId}/payments`, {
+    method: "POST",
+    auth: "staff",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function listTenantRentInvoices() {
+  return apiFetch<RentInvoice[]>("/tenant/rent-invoices", { auth: "tenant" });
 }

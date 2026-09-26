@@ -3,7 +3,6 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getTenantMe, getTenantModules } from "./endpoints";
-import { getTokens, clearTokens } from "./auth-storage";
 import { ModuleInfo, TenantMe } from "./types";
 
 interface TenantSessionValue {
@@ -14,8 +13,9 @@ interface TenantSessionValue {
 
 const TenantSessionContext = createContext<TenantSessionValue | null>(null);
 
-/** Fetches the tenant session once per layout mount; nested pages read it
- * from context instead of re-fetching /auth/tenant/me and /modules/tenant-me. */
+/** Fetches the tenant session once per layout mount (the browser sends the
+ * httpOnly session cookie automatically); nested pages read the result from
+ * context instead of re-fetching /auth/tenant/me and /modules/tenant-me. */
 export function TenantSessionProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [tenant, setTenant] = useState<TenantMe | null>(null);
@@ -25,10 +25,6 @@ export function TenantSessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      if (!getTokens("tenant")) {
-        router.replace("/access");
-        return;
-      }
       try {
         const me = await getTenantMe();
         const mods = await getTenantModules();
@@ -38,7 +34,6 @@ export function TenantSessionProvider({ children }: { children: ReactNode }) {
           setLoading(false);
         }
       } catch {
-        clearTokens("tenant");
         if (!cancelled) router.replace("/access");
       }
     }

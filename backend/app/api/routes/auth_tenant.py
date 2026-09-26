@@ -1,24 +1,23 @@
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_tenancy
+from app.api.deps import ensure_org_active, get_current_tenancy
 from app.core.config import settings
+from app.core.cookies import clear_session_cookies, set_session_cookies
 from app.core.security import create_token, decode_token, generate_url_safe_token, hash_lookup_value
 from app.db.session import get_db
 from app.models.access_request import TenantAccessRequest
 from app.models.tenancy import Tenancy, TenancyStatus
 from app.models.unit import Unit
-from app.schemas.auth import RefreshRequest, TenantAccessRequestIn, TenantAccessVerifyIn, TenantMe, TokenPair
+from app.schemas.auth import TenantAccessRequestIn, TenantAccessVerifyIn, TenantMe
 from app.services.email import send_tenant_access_link
 from app.services.rate_limit import is_rate_limited
 
 router = APIRouter(prefix="/auth/tenant", tags=["auth-tenant"])
 
-GENERIC_RESPONSE = {
-    "message": "If that email is registered for this unit, a sign-in link has been sent."
-}
+GENERIC_MESSAGE = "If that email is registered for this unit, a sign-in link has been sent."
 
 
 @router.post("/{access_slug}/request")
@@ -29,16 +28,18 @@ def request_access(
     db: Session = Depends(get_db),
 ):
     client_ip = request.client.host if request.client else "unknown"
+    generic_response = {"message": GENERIC_MESSAGE}
+
     # Rate limit per-IP and per-(unit+email) so the public endpoint can't be
     # used to spam a resident's inbox or brute-force which emails are valid.
     if is_rate_limited(f"tenant-otp-ip:{client_ip}", settings.RATE_LIMIT_OTP_PER_HOUR, 3600):
-        return GENERIC_RESPONSE
+        return generic_response
     if is_rate_limited(f"tenant-otp:{access_slug}:{payload.email.lower()}", settings.RATE_LIMIT_OTP_PER_HOUR, 3600):
-        return GENERIC_RESPONSE
+        return generic_response
 
     unit = db.query(Unit).filter(Unit.access_slug == access_slug).first()
     if unit is None:
-        return GENERIC_RESPONSE
+        return generic_response
 
     tenancy = (
         db.query(Tenancy)
@@ -50,8 +51,8 @@ def request_access(
         .filter(Tenancy.tenant.has(email=payload.email.lower()))
         .first()
     )
-    if tenancy is None:
-        return GENERIC_RESPONSE
+    if tenancy is None or not tenancy.unit.property.organization.is_active:
+        return generic_response
 
     raw_token = generate_url_safe_token()
     access_request = TenantAccessRequest(
@@ -64,22 +65,29 @@ def request_access(
     db.commit()
 
     magic_link = f"{settings.FRONTEND_URL}/access/verify?token={raw_token}"
-    send_tenant_access_link(tenancy.tenant.email, tenancy.tenant.full_name, magic_link)
-    return GENERIC_RESPONSE
+    email_sent = send_tenant_access_link(tenancy.tenant.email, tenancy.tenant.full_name, magic_link)
+
+    # Outside production, if no real SMTP is configured, hand the link back
+    # directly so the flow is testable without reading server logs. Never
+    # done in production, and never done once SMTP is actually wired up.
+    if settings.APP_ENV != "production" and not settings.SMTP_USER:
+        return {**generic_response, "dev_magic_link": magic_link}
+
+    return generic_response
 
 
-def _issue_tenant_tokens(tenancy_id: str) -> TokenPair:
+def _issue_session(response: Response, tenancy_id: str) -> None:
     access = create_token(
         tenancy_id, "tenant", "access", timedelta(minutes=settings.TENANT_ACCESS_TOKEN_EXPIRE_MINUTES)
     )
     refresh = create_token(
         tenancy_id, "tenant", "refresh", timedelta(hours=settings.TENANT_REFRESH_TOKEN_EXPIRE_HOURS)
     )
-    return TokenPair(access_token=access, refresh_token=refresh)
+    set_session_cookies(response, "tenant", access, refresh)
 
 
-@router.post("/verify", response_model=TokenPair)
-def verify(payload: TenantAccessVerifyIn, db: Session = Depends(get_db)):
+@router.post("/verify", response_model=TenantMe)
+def verify(payload: TenantAccessVerifyIn, response: Response, db: Session = Depends(get_db)):
     token_hash = hash_lookup_value(payload.token)
     access_request = (
         db.query(TenantAccessRequest).filter(TenantAccessRequest.token_hash == token_hash).first()
@@ -95,25 +103,37 @@ def verify(payload: TenantAccessVerifyIn, db: Session = Depends(get_db)):
     tenancy = db.get(Tenancy, access_request.tenancy_id)
     if tenancy is None or tenancy.status != TenancyStatus.ACTIVE:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Access to this unit has been revoked")
+    ensure_org_active(db, tenancy.unit.property.organization_id)
 
     access_request.used_at = now
     db.commit()
-    return _issue_tenant_tokens(str(tenancy.id))
+    _issue_session(response, str(tenancy.id))
+    return _to_tenant_me(tenancy)
 
 
-@router.post("/refresh", response_model=TokenPair)
-def refresh(payload: RefreshRequest, db: Session = Depends(get_db)):
-    data = decode_token(payload.refresh_token, audience="tenant")
+@router.post("/refresh")
+def refresh(request: Request, response: Response, db: Session = Depends(get_db)):
+    token = request.cookies.get("tenant_refresh")
+    if not token:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not authenticated")
+    data = decode_token(token, audience="tenant")
     if not data or data.get("type") != "refresh":
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid refresh token")
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session")
     tenancy = db.get(Tenancy, data["sub"])
     if tenancy is None or tenancy.status != TenancyStatus.ACTIVE:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Access has been revoked")
-    return _issue_tenant_tokens(str(tenancy.id))
+    ensure_org_active(db, tenancy.unit.property.organization_id)
+    _issue_session(response, str(tenancy.id))
+    return {"message": "ok"}
 
 
-@router.get("/me", response_model=TenantMe)
-def me(tenancy: Tenancy = Depends(get_current_tenancy)):
+@router.post("/logout")
+def logout(response: Response):
+    clear_session_cookies(response, "tenant")
+    return {"message": "Logged out"}
+
+
+def _to_tenant_me(tenancy: Tenancy) -> TenantMe:
     return TenantMe(
         tenancy_id=tenancy.id,
         tenant_id=tenancy.tenant.id,
@@ -125,3 +145,8 @@ def me(tenancy: Tenancy = Depends(get_current_tenancy)):
         organization_id=tenancy.unit.property.organization_id,
         organization_name=tenancy.unit.property.organization.name,
     )
+
+
+@router.get("/me", response_model=TenantMe)
+def me(tenancy: Tenancy = Depends(get_current_tenancy)):
+    return _to_tenant_me(tenancy)

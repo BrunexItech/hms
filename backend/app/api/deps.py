@@ -1,31 +1,36 @@
 import uuid
 
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.security import decode_token
 from app.db.session import get_db
 from app.models.module import Module, OrganizationModule
+from app.models.organization import Organization
 from app.models.staff_user import StaffRole, StaffUser
 from app.models.tenancy import Tenancy, TenancyStatus
 
-staff_bearer = HTTPBearer(auto_error=False)
-tenant_bearer = HTTPBearer(auto_error=False)
+
+def ensure_org_active(db: Session, organization_id: uuid.UUID | None) -> None:
+    """Suspending an organization must actually lock its people out."""
+    if organization_id is None:
+        return
+    org = db.get(Organization, organization_id)
+    if org is None or not org.is_active:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "This organization has been suspended")
 
 
-def get_current_staff(
-    creds: HTTPAuthorizationCredentials | None = Depends(staff_bearer),
-    db: Session = Depends(get_db),
-) -> StaffUser:
-    if creds is None:
+def get_current_staff(request: Request, db: Session = Depends(get_db)) -> StaffUser:
+    token = request.cookies.get("staff_access")
+    if not token:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not authenticated")
-    payload = decode_token(creds.credentials, audience="staff")
+    payload = decode_token(token, audience="staff")
     if not payload or payload.get("type") != "access":
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired token")
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session")
     user = db.get(StaffUser, uuid.UUID(payload["sub"]))
     if user is None or not user.is_active:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Account not found or disabled")
+    ensure_org_active(db, user.organization_id)
     return user
 
 
@@ -41,18 +46,23 @@ def require_owner_or_manager(staff: StaffUser = Depends(get_current_staff)) -> S
     return staff
 
 
-def get_current_tenancy(
-    creds: HTTPAuthorizationCredentials | None = Depends(tenant_bearer),
-    db: Session = Depends(get_db),
-) -> Tenancy:
-    if creds is None:
+def require_owner(staff: StaffUser = Depends(get_current_staff)) -> StaffUser:
+    if staff.role != StaffRole.OWNER:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Owner access required")
+    return staff
+
+
+def get_current_tenancy(request: Request, db: Session = Depends(get_db)) -> Tenancy:
+    token = request.cookies.get("tenant_access")
+    if not token:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not authenticated")
-    payload = decode_token(creds.credentials, audience="tenant")
+    payload = decode_token(token, audience="tenant")
     if not payload or payload.get("type") != "access":
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired token")
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session")
     tenancy = db.get(Tenancy, uuid.UUID(payload["sub"]))
     if tenancy is None or tenancy.status != TenancyStatus.ACTIVE:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Access has been revoked")
+    ensure_org_active(db, tenancy.unit.property.organization_id)
     return tenancy
 
 

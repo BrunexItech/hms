@@ -9,7 +9,7 @@ import { Input, Label, Select } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { FullPageSpinner } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/toast";
-import { createUtilityBill, listAllUnits, listStaffUtilityBills } from "@/lib/endpoints";
+import { createUtilityBill, listAllUnits, listStaffUtilityBills, updateUtilityBillStatus } from "@/lib/endpoints";
 import { UtilityBill, UtilityBillStatus, Unit } from "@/lib/types";
 import { ApiError } from "@/lib/api";
 
@@ -43,6 +43,16 @@ export default function UtilitiesPage() {
     refresh();
   }, []);
 
+  async function handleStatus(bill: UtilityBill, status: UtilityBillStatus) {
+    try {
+      await updateUtilityBillStatus(bill.id, status);
+      notify(status === "paid" ? "Marked as paid" : "Marked as pending");
+      await refresh();
+    } catch (err) {
+      notify(err instanceof ApiError ? err.message : "Failed to update bill", "error");
+    }
+  }
+
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -63,23 +73,21 @@ export default function UtilitiesPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Utilities & billing</h1>
-          <p className="text-sm text-muted">Water, electricity and other bills per unit.</p>
-        </div>
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="h-4 w-4" /> New bill
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h1 className="text-[15px] font-semibold text-foreground">Utilities & billing</h1>
+        <Button size="sm" onClick={() => setOpen(true)}>
+          <Plus className="h-3.5 w-3.5" /> New bill
         </Button>
       </div>
 
       {bills.length === 0 ? (
         <Card className="flex flex-col items-center py-16 text-center">
-          <Receipt className="mb-3 h-10 w-10 text-muted" />
-          <p className="font-medium text-foreground">No bills yet</p>
+          <Receipt className="mb-3 h-8 w-8 text-muted" />
+          <p className="text-sm font-medium text-foreground">No bills yet</p>
         </Card>
       ) : (
-        <div className="overflow-x-auto premium-card p-0">
+        <>
+        <div className="hidden overflow-x-auto premium-card p-0 sm:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted">
@@ -88,6 +96,7 @@ export default function UtilitiesPage() {
                 <th className="px-4 py-3 font-medium">Period</th>
                 <th className="px-4 py-3 font-medium">Amount</th>
                 <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium text-right">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -104,11 +113,43 @@ export default function UtilitiesPage() {
                   <td className="px-4 py-3.5">
                     <Badge tone={statusTone[b.status]}>{b.status}</Badge>
                   </td>
+                  <td className="px-4 py-3.5 text-right">
+                    {b.status === "paid" ? (
+                      <Button size="sm" variant="ghost" onClick={() => handleStatus(b, "pending")}>
+                        Undo
+                      </Button>
+                    ) : (
+                      <Button size="sm" variant="outline" onClick={() => handleStatus(b, "paid")}>
+                        Mark paid
+                      </Button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        <div className="space-y-2 sm:hidden">
+          {bills.map((b) => (
+            <Card key={b.id} className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[13.5px] font-semibold capitalize text-foreground">{b.utility_type}</p>
+                  <p className="text-[12px] text-muted">{b.property_name} · {b.unit_name}</p>
+                </div>
+                <Badge tone={statusTone[b.status]}>{b.status}</Badge>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-[12px]">
+                <span className="text-muted">{b.period_start} – {b.period_end}</span>
+                <span className="text-[13.5px] font-semibold tabular-nums text-foreground">{b.amount.toLocaleString()}</span>
+              </div>
+              <Button size="sm" variant={b.status === "paid" ? "ghost" : "outline"} className="mt-3 w-full" onClick={() => handleStatus(b, b.status === "paid" ? "pending" : "paid")}>
+                {b.status === "paid" ? "Undo" : "Mark paid"}
+              </Button>
+            </Card>
+          ))}
+        </div>
+        </>
       )}
 
       <Modal open={open} onClose={() => setOpen(false)} title="New utility bill">

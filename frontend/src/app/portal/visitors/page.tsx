@@ -61,29 +61,26 @@ export default function TenantVisitorsPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Visitor bookings</h1>
-          <p className="text-sm text-muted">Pre-register someone coming to visit you.</p>
-        </div>
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="h-4 w-4" /> Book a visitor
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h1 className="text-[15px] font-semibold text-foreground">Visitor bookings</h1>
+        <Button size="sm" onClick={() => setOpen(true)}>
+          <Plus className="h-3.5 w-3.5" /> Book a visitor
         </Button>
       </div>
 
       {bookings.length === 0 ? (
         <Card className="flex flex-col items-center py-16 text-center">
-          <ScanLine className="mb-3 h-10 w-10 text-muted" />
-          <p className="font-medium text-foreground">No visitors booked yet</p>
+          <ScanLine className="mb-3 h-8 w-8 text-muted" />
+          <p className="text-sm font-medium text-foreground">No visitors booked yet</p>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {bookings.map((b) => (
-            <Card key={b.id}>
+            <Card key={b.id} className="p-4">
               <div className="flex items-center justify-between gap-2">
                 <div>
-                  <p className="font-semibold text-foreground">{b.visitor_name}</p>
-                  <p className="text-xs text-muted">
+                  <p className="text-[13.5px] font-semibold text-foreground">{b.visitor_name}</p>
+                  <p className="text-[12px] text-muted">
                     {b.visit_date} {b.expected_time ? `at ${b.expected_time}` : ""}
                     {b.purpose ? ` · ${b.purpose}` : ""}
                   </p>

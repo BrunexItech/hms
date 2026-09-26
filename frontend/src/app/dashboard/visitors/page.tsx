@@ -45,25 +45,24 @@ export default function StaffVisitorsPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-semibold text-foreground">Visitor bookings</h1>
-      <p className="mb-6 text-sm text-muted">Visitors pre-registered by residents.</p>
+      <h1 className="mb-4 text-[15px] font-semibold text-foreground">Visitor bookings</h1>
 
       {bookings.length === 0 ? (
         <Card className="flex flex-col items-center py-16 text-center">
-          <ScanLine className="mb-3 h-10 w-10 text-muted" />
-          <p className="font-medium text-foreground">No visitor bookings yet</p>
+          <ScanLine className="mb-3 h-8 w-8 text-muted" />
+          <p className="text-sm font-medium text-foreground">No visitor bookings yet</p>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {bookings.map((b) => (
-            <Card key={b.id}>
+            <Card key={b.id} className="p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="font-semibold text-foreground">{b.visitor_name}</p>
-                  <p className="text-sm text-muted">
+                  <p className="text-[13.5px] font-semibold text-foreground">{b.visitor_name}</p>
+                  <p className="text-[13px] text-muted">
                     Visiting {b.tenant_name} · {b.unit_name}
                   </p>
-                  <p className="text-xs text-muted">
+                  <p className="text-[12px] text-muted">
                     {b.visit_date} {b.expected_time ? `at ${b.expected_time}` : ""}
                     {b.purpose ? ` · ${b.purpose}` : ""}
                   </p>

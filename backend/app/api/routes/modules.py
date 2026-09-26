@@ -12,7 +12,7 @@ from app.services.audit import record_audit
 
 router = APIRouter(tags=["modules"])
 
-TENANT_FACING_MODULE_KEYS = {"complaints", "visitor_booking", "utilities"}
+TENANT_FACING_MODULE_KEYS = {"rent", "complaints", "visitor_booking", "utilities"}
 
 
 @router.get("/modules/tenant-me", response_model=list[ModuleOut])

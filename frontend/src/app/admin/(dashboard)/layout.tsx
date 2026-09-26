@@ -2,13 +2,16 @@
 
 import { ReactNode, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, ShieldCheck } from "lucide-react";
+import { Building2, KeyRound, ShieldCheck } from "lucide-react";
 import { AppShell, NavItem } from "@/components/shell/app-shell";
 import { FullPageSpinner } from "@/components/ui/spinner";
 import { StaffSessionProvider, useStaffSession } from "@/lib/use-staff-session";
-import { clearTokens } from "@/lib/auth-storage";
+import { staffLogout } from "@/lib/endpoints";
 
-const navItems: NavItem[] = [{ href: "/admin", label: "Organizations", icon: Building2 }];
+const navItems: NavItem[] = [
+  { href: "/admin", label: "Organizations", icon: Building2 },
+  { href: "/admin/account", label: "Account", icon: KeyRound },
+];
 
 function SuperAdminChrome({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -29,8 +32,8 @@ function SuperAdminChrome({ children }: { children: ReactNode }) {
       brandSubtitle="Platform Control Room"
       userName={staff.full_name}
       userMeta={staff.email}
-      onLogout={() => {
-        clearTokens("staff");
+      onLogout={async () => {
+        await staffLogout();
         router.replace("/admin/login");
       }}
     >

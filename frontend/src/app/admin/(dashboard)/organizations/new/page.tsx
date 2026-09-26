@@ -47,10 +47,10 @@ export default function NewOrganizationPage() {
 
   return (
     <div className="max-w-lg">
-      <Link href="/admin" className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground">
+      <Link href="/admin" className="mb-3 inline-flex items-center gap-1.5 text-[13px] text-muted hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> Organizations
       </Link>
-      <h1 className="mb-6 text-2xl font-semibold text-foreground">New organization</h1>
+      <h1 className="mb-4 text-[15px] font-semibold text-foreground">New organization</h1>
 
       <Card>
         <form onSubmit={handleSubmit} className="space-y-4">

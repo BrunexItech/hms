@@ -7,7 +7,6 @@ import { QrCode } from "@/components/ui/qr-code";
 import { FullPageSpinner } from "@/components/ui/spinner";
 import { getUnitAccessInfo, getUnitAccessLink } from "@/lib/endpoints";
 import { UnitAccessInfo } from "@/lib/types";
-import { getTokens } from "@/lib/auth-storage";
 import { useRouter } from "next/navigation";
 
 export default function PrintUnitAccessPage({ params }: PageProps<"/print/units/[id]">) {
@@ -17,14 +16,12 @@ export default function PrintUnitAccessPage({ params }: PageProps<"/print/units/
   const [accessUrl, setAccessUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!getTokens("staff")) {
-      router.replace("/login");
-      return;
-    }
-    getUnitAccessLink(unitId).then(async (link) => {
-      setAccessUrl(link.access_url);
-      setInfo(await getUnitAccessInfo(link.access_slug));
-    });
+    getUnitAccessLink(unitId)
+      .then(async (link) => {
+        setAccessUrl(link.access_url);
+        setInfo(await getUnitAccessInfo(link.access_slug));
+      })
+      .catch(() => router.replace("/login"));
   }, [unitId, router]);
 
   if (!info || !accessUrl) return <FullPageSpinner />;

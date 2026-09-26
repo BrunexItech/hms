@@ -6,14 +6,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import models  # noqa: F401 — ensures every table is registered on Base.metadata
 from app.api.routes import api_router
 from app.core.config import settings
-from app.db.base import Base
-from app.db.session import engine
+from app.core.csrf_middleware import CSRFMiddleware
 from app.db.seed_modules import seed_modules
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
+    # Schema is owned by Alembic migrations (see backend/alembic/), run as an
+    # explicit deploy step (`alembic upgrade head`) — never auto-applied here,
+    # since that's unsafe with multiple replicas booting concurrently.
     seed_modules()
     yield
 
@@ -26,6 +27,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(CSRFMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,

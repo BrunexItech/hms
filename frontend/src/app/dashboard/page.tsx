@@ -1,67 +1,78 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Building2, Users, MessageSquareWarning, ScanLine, Sparkles } from "lucide-react";
+import { Building2, Users, Wallet, AlertTriangle, MessageSquareWarning, ScanLine, Receipt } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
+import { Card } from "@/components/ui/card";
+import { BarTrendChart } from "@/components/ui/bar-trend-chart";
 import { FullPageSpinner } from "@/components/ui/spinner";
-import { listProperties, listTenancies, listStaffComplaints, listStaffVisitorBookings } from "@/lib/endpoints";
-import { useStaffSession } from "@/lib/use-staff-session";
-
-interface Stats {
-  properties: number;
-  activeTenants: number;
-  openComplaints: number;
-  pendingVisitors: number;
-}
+import { getDashboardSummary } from "@/lib/endpoints";
+import { DashboardSummary } from "@/lib/types";
 
 export default function DashboardOverview() {
-  const { staff, modules } = useStaffSession();
-  const [stats, setStats] = useState<Stats | null>(null);
-
-  const hasModule = (key: string) => modules.some((m) => m.key === key && m.enabled);
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
 
   useEffect(() => {
-    if (modules.length === 0) return;
-    async function load() {
-      const [properties, tenancies, complaints, visitors] = await Promise.all([
-        hasModule("properties") ? listProperties() : Promise.resolve([]),
-        hasModule("tenants") ? listTenancies() : Promise.resolve([]),
-        hasModule("complaints") ? listStaffComplaints() : Promise.resolve([]),
-        hasModule("visitor_booking") ? listStaffVisitorBookings() : Promise.resolve([]),
-      ]);
-      setStats({
-        properties: properties.length,
-        activeTenants: tenancies.filter((t) => t.status === "active").length,
-        openComplaints: complaints.filter((c) => c.status === "open" || c.status === "in_progress").length,
-        pendingVisitors: visitors.filter((v) => v.status === "pending").length,
-      });
-    }
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modules]);
+    getDashboardSummary().then(setSummary);
+  }, []);
 
-  if (!stats) return <FullPageSpinner />;
+  if (!summary) return <FullPageSpinner />;
 
   return (
     <div>
-      <div className="ambient-bg premium-card mb-6 flex flex-col justify-between gap-4 p-6 sm:flex-row sm:items-center">
-        <div>
-          <span className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-            <Sparkles className="h-3 w-3" /> Portfolio overview
-          </span>
-          <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
-            Welcome back{staff ? `, ${staff.full_name.split(" ")[0]}` : ""}
-          </h1>
-          <p className="mt-1 text-sm text-muted">Here&apos;s what&apos;s happening across your portfolio today.</p>
-        </div>
+      <h1 className="mb-4 text-[15px] font-semibold text-foreground">Overview</h1>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {summary.properties_enabled && (
+          <StatCard
+            label="Occupancy"
+            value={`${summary.occupancy_rate}%`}
+            hint={`${summary.occupied_units}/${summary.total_units} units occupied`}
+            icon={Building2}
+            tone="primary"
+          />
+        )}
+        {summary.tenants_enabled && (
+          <StatCard label="Active residents" value={summary.active_tenants ?? 0} icon={Users} tone="success" />
+        )}
+        {summary.rent_enabled && (
+          <StatCard
+            label="Rent collected this month"
+            value={(summary.rent_collected_this_month ?? 0).toLocaleString()}
+            hint={`of ${(summary.rent_due_this_month ?? 0).toLocaleString()} due`}
+            icon={Wallet}
+            tone="success"
+          />
+        )}
+        {summary.rent_enabled && (
+          <StatCard
+            label="Rent outstanding"
+            value={(summary.rent_outstanding ?? 0).toLocaleString()}
+            icon={AlertTriangle}
+            tone="warning"
+          />
+        )}
+        {summary.complaints_enabled && (
+          <StatCard label="Open complaints" value={summary.open_complaints ?? 0} icon={MessageSquareWarning} tone="warning" />
+        )}
+        {summary.visitor_booking_enabled && (
+          <StatCard label="Pending visitors" value={summary.pending_visitors ?? 0} icon={ScanLine} tone="info" />
+        )}
+        {summary.utilities_enabled && (
+          <StatCard
+            label="Utilities outstanding"
+            value={(summary.utilities_outstanding ?? 0).toLocaleString()}
+            icon={Receipt}
+            tone="warning"
+          />
+        )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Properties" value={stats.properties} icon={Building2} tone="primary" />
-        <StatCard label="Active residents" value={stats.activeTenants} icon={Users} tone="success" />
-        <StatCard label="Open complaints" value={stats.openComplaints} icon={MessageSquareWarning} tone="warning" />
-        <StatCard label="Pending visitors" value={stats.pendingVisitors} icon={ScanLine} tone="info" />
-      </div>
+      {summary.rent_enabled && summary.monthly_revenue && (
+        <Card className="mt-4">
+          <BarTrendChart data={summary.monthly_revenue} />
+        </Card>
+      )}
     </div>
   );
 }

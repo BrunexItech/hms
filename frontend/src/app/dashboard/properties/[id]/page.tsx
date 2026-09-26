@@ -102,51 +102,42 @@ export default function PropertyUnitsPage({ params }: PageProps<"/dashboard/prop
 
   return (
     <div>
-      <Link href="/dashboard/properties" className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Properties
+      <Link href="/dashboard/properties" className="mb-3 inline-flex items-center gap-1.5 text-[13px] text-muted hover:text-foreground">
+        <ArrowLeft className="h-3.5 w-3.5" /> Properties
       </Link>
 
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-bold text-foreground">Units</h1>
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="h-4 w-4" /> New unit
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h1 className="text-[15px] font-semibold text-foreground">Units</h1>
+        <Button size="sm" onClick={() => setCreateOpen(true)}>
+          <Plus className="h-3.5 w-3.5" /> New unit
         </Button>
       </div>
 
       {units.length === 0 ? (
         <Card className="flex flex-col items-center py-16 text-center">
-          <DoorOpen className="mb-3 h-10 w-10 text-muted" />
-          <p className="font-medium text-foreground">No units yet</p>
-          <p className="mt-1 text-sm text-muted">Add a unit to generate its resident access link.</p>
+          <DoorOpen className="mb-3 h-8 w-8 text-muted" />
+          <p className="text-sm font-medium text-foreground">No units yet</p>
+          <p className="mt-1 text-[13px] text-muted">Add a unit to generate its resident access link.</p>
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="premium-card divide-y divide-border overflow-hidden p-0">
           {units.map((u) => (
-            <Card key={u.id} interactive className="overflow-hidden p-0">
-              <div
-                className={`flex items-center justify-between px-5 py-3.5 ${
-                  u.status === "occupied" ? "gradient-success" : "bg-surface-2"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <DoorOpen className={`h-4 w-4 ${u.status === "occupied" ? "text-white" : "text-muted"}`} />
-                  <p className={`font-display font-semibold ${u.status === "occupied" ? "text-white" : "text-foreground"}`}>
-                    {u.name}
-                  </p>
-                </div>
-                <Badge tone={u.status === "occupied" ? "neutral" : "neutral"} className={u.status === "occupied" ? "border-white/30 bg-white/20 text-white" : ""}>
-                  {u.status}
-                </Badge>
-              </div>
-              <div className="flex gap-2 p-4">
-                <Button variant="secondary" size="sm" className="flex-1" onClick={() => openAccess(u)}>
+            <div key={u.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+              <span
+                className={`h-2 w-2 shrink-0 rounded-full ${u.status === "occupied" ? "bg-success" : "bg-border"}`}
+                aria-hidden
+              />
+              <p className="min-w-0 flex-1 text-[13.5px] font-medium text-foreground">{u.name}</p>
+              <Badge tone={u.status === "occupied" ? "success" : "neutral"}>{u.status}</Badge>
+              <div className="flex gap-1.5">
+                <Button variant="secondary" size="sm" onClick={() => openAccess(u)}>
                   <QrIcon className="h-3.5 w-3.5" /> Access
                 </Button>
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => setTenantUnit(u)}>
+                <Button variant="outline" size="sm" onClick={() => setTenantUnit(u)}>
                   <UserPlus className="h-3.5 w-3.5" /> Tenant
                 </Button>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       )}

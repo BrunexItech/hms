@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { getMyOrganization, updateMyOrganization } from "@/lib/endpoints";
 import { Organization } from "@/lib/types";
 import { ApiError } from "@/lib/api";
+import { ChangePasswordCard } from "@/components/change-password-card";
 
 const PRESET_COLORS = ["#7C3AED", "#4F46E5", "#0EA5E9", "#10B981", "#F59E0B", "#EF4444", "#EC4899"];
 
@@ -48,8 +49,8 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="mb-1 text-2xl font-semibold text-foreground">Settings</h1>
-      <p className="mb-6 text-sm text-muted">Customize your business identity across the platform.</p>
+      <h1 className="text-[15px] font-semibold text-foreground">Settings</h1>
+      <p className="mb-4 text-[13px] text-muted">Customize your business identity across the platform.</p>
 
       <Card>
         <CardHeader>
@@ -106,6 +107,10 @@ export default function SettingsPage() {
           </Button>
         </form>
       </Card>
+
+      <div className="mt-5">
+        <ChangePasswordCard />
+      </div>
     </div>
   );
 }

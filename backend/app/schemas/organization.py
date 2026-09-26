@@ -8,7 +8,7 @@ class OrganizationCreate(BaseModel):
     name: str
     slug: str = Field(pattern=r"^[a-z0-9-]+$")
     owner_email: str
-    owner_password: str
+    owner_password: str = Field(min_length=8, max_length=128)
     owner_full_name: str
     primary_color: str = "#7C3AED"
 

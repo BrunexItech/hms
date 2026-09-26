@@ -21,45 +21,40 @@ export default function SuperAdminOrganizations() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Organizations</h1>
-          <p className="text-sm text-muted">Every business running on the platform.</p>
-        </div>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h1 className="text-[15px] font-semibold text-foreground">Organizations</h1>
         <Link href="/admin/organizations/new">
-          <Button>
-            <Plus className="h-4 w-4" /> New organization
+          <Button size="sm">
+            <Plus className="h-3.5 w-3.5" /> New organization
           </Button>
         </Link>
       </div>
 
       {orgs.length === 0 ? (
         <Card className="flex flex-col items-center py-16 text-center">
-          <Building2 className="mb-3 h-10 w-10 text-muted" />
-          <p className="font-medium text-foreground">No organizations yet</p>
+          <Building2 className="mb-3 h-8 w-8 text-muted" />
+          <p className="text-sm font-medium text-foreground">No organizations yet</p>
         </Card>
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="premium-card divide-y divide-border overflow-hidden p-0">
           {orgs.map((o) => (
-            <Link key={o.id} href={`/admin/organizations/${o.id}`}>
-              <Card interactive className="h-full overflow-hidden p-0">
-                <div
-                  className="dot-grid relative flex h-20 items-center px-5"
-                  style={{ background: `linear-gradient(135deg, ${o.primary_color}, color-mix(in srgb, ${o.primary_color} 60%, black))` }}
-                >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20 text-white backdrop-blur-sm">
-                    <Building2 className="h-5 w-5" />
-                  </div>
-                  <ChevronRight className="absolute right-4 h-4 w-4 text-white/80" />
-                </div>
-                <div className="p-5">
-                  <p className="font-display font-semibold text-foreground">{o.name}</p>
-                  <p className="text-sm text-muted">/{o.slug}</p>
-                  <div className="mt-3">
-                    <Badge tone={o.is_active ? "success" : "danger"}>{o.is_active ? "Active" : "Suspended"}</Badge>
-                  </div>
-                </div>
-              </Card>
+            <Link
+              key={o.id}
+              href={`/admin/organizations/${o.id}`}
+              className="flex items-center gap-3.5 px-4 py-3.5 transition-colors hover:bg-surface-2"
+            >
+              <div
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white"
+                style={{ background: o.primary_color }}
+              >
+                <Building2 className="h-4.5 w-4.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13.5px] font-medium text-foreground">{o.name}</p>
+                <p className="truncate text-[12.5px] text-muted">/{o.slug}</p>
+              </div>
+              <Badge tone={o.is_active ? "success" : "danger"}>{o.is_active ? "Active" : "Suspended"}</Badge>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted" />
             </Link>
           ))}
         </div>

@@ -50,26 +50,25 @@ export default function StaffComplaintsPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-semibold text-foreground">Complaints</h1>
-      <p className="mb-6 text-sm text-muted">Maintenance issues raised by residents.</p>
+      <h1 className="mb-4 text-[15px] font-semibold text-foreground">Complaints</h1>
 
       {complaints.length === 0 ? (
         <Card className="flex flex-col items-center py-16 text-center">
-          <MessageSquareWarning className="mb-3 h-10 w-10 text-muted" />
-          <p className="font-medium text-foreground">No complaints yet</p>
+          <MessageSquareWarning className="mb-3 h-8 w-8 text-muted" />
+          <p className="text-sm font-medium text-foreground">No complaints yet</p>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {complaints.map((c) => (
-            <Card key={c.id}>
+            <Card key={c.id} className="p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex flex-wrap items-center gap-2">
-                    <p className="font-semibold text-foreground">{c.subject}</p>
+                    <p className="text-[13.5px] font-semibold text-foreground">{c.subject}</p>
                     <Badge tone={priorityTone[c.priority]}>{c.priority}</Badge>
                   </div>
-                  <p className="text-sm text-muted">{c.description}</p>
-                  <p className="mt-2 text-xs text-muted">
+                  <p className="text-[13px] text-muted">{c.description}</p>
+                  <p className="mt-1.5 text-[12px] text-muted">
                     {c.tenant_name} · {c.unit_name} · {new Date(c.created_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -78,7 +77,7 @@ export default function StaffComplaintsPage() {
                   <Select
                     value={c.status}
                     onChange={(e) => handleStatusChange(c.id, e.target.value as ComplaintStatus)}
-                    className="w-auto"
+                    className="h-8 w-auto py-0 text-[13px]"
                   >
                     <option value="open">Open</option>
                     <option value="in_progress">In progress</option>

@@ -1,8 +1,9 @@
-import { Building2, Users, MessageSquareWarning, ScanLine, Receipt, LayoutGrid, LucideIcon } from "lucide-react";
+import { Building2, Users, MessageSquareWarning, ScanLine, Receipt, Wallet, LayoutGrid, LucideIcon } from "lucide-react";
 
 export const iconMap: Record<string, LucideIcon> = {
   "building-2": Building2,
   users: Users,
+  wallet: Wallet,
   "message-square-warning": MessageSquareWarning,
   "scan-line": ScanLine,
   receipt: Receipt,

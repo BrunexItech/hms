@@ -3,7 +3,6 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getMyModules, getStaffMe } from "./endpoints";
-import { getTokens, clearTokens } from "./auth-storage";
 import { ModuleInfo, StaffMe } from "./types";
 
 interface StaffSessionValue {
@@ -14,8 +13,9 @@ interface StaffSessionValue {
 
 const StaffSessionContext = createContext<StaffSessionValue | null>(null);
 
-/** Fetches the staff session once per layout mount; nested pages read it
- * from context instead of re-fetching /auth/staff/me and /modules/me. */
+/** Fetches the staff session once per layout mount (the browser sends the
+ * httpOnly session cookie automatically); nested pages read the result from
+ * context instead of re-fetching /auth/staff/me and /modules/me. */
 export function StaffSessionProvider({
   children,
   loginPath = "/login",
@@ -31,10 +31,6 @@ export function StaffSessionProvider({
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      if (!getTokens("staff")) {
-        router.replace(loginPath);
-        return;
-      }
       try {
         const me = await getStaffMe();
         const mods = await getMyModules();
@@ -44,7 +40,6 @@ export function StaffSessionProvider({
           setLoading(false);
         }
       } catch {
-        clearTokens("staff");
         if (!cancelled) router.replace(loginPath);
       }
     }

@@ -13,8 +13,6 @@ import { createProperty, listProperties } from "@/lib/endpoints";
 import { Property } from "@/lib/types";
 import { ApiError } from "@/lib/api";
 
-const BANNER_TONES = ["premium-gradient", "gradient-info", "gradient-success", "gradient-warning"];
-
 export default function PropertiesPage() {
   const { notify } = useToast();
   const [properties, setProperties] = useState<Property[] | null>(null);
@@ -52,46 +50,42 @@ export default function PropertiesPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Properties</h1>
-          <p className="text-sm text-muted">Branches, plots and buildings under your business.</p>
-        </div>
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="h-4 w-4" /> New property
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h1 className="text-[15px] font-semibold text-foreground">Properties</h1>
+        <Button size="sm" onClick={() => setOpen(true)}>
+          <Plus className="h-3.5 w-3.5" /> New property
         </Button>
       </div>
 
       {properties.length === 0 ? (
         <Card className="flex flex-col items-center py-16 text-center">
-          <Building2 className="mb-3 h-10 w-10 text-muted" />
-          <p className="font-medium text-foreground">No properties yet</p>
-          <p className="mt-1 text-sm text-muted">Add your first branch or plot to start registering units.</p>
+          <Building2 className="mb-3 h-8 w-8 text-muted" />
+          <p className="text-sm font-medium text-foreground">No properties yet</p>
+          <p className="mt-1 text-[13px] text-muted">Add your first branch or plot to start registering units.</p>
         </Card>
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {properties.map((p, i) => (
-            <Link key={p.id} href={`/dashboard/properties/${p.id}`}>
-              <Card interactive className="h-full overflow-hidden p-0">
-                <div className={`relative flex h-24 items-center justify-center ${BANNER_TONES[i % BANNER_TONES.length]}`}>
-                  <div className="dot-grid absolute inset-0 opacity-20" />
-                  <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-white backdrop-blur-sm">
-                    <Building2 className="h-6 w-6" />
-                  </div>
-                  <ChevronRight className="absolute right-3 top-3 h-4 w-4 text-white/80" />
-                </div>
-                <div className="p-5">
-                  <p className="font-display font-semibold text-foreground">{p.name}</p>
-                  {p.address && (
-                    <p className="mt-1 flex items-center gap-1 text-sm text-muted">
-                      <MapPin className="h-3.5 w-3.5" /> {p.address}
-                    </p>
-                  )}
-                  <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-2.5 py-1 text-xs font-medium text-muted">
-                    <DoorOpen className="h-3.5 w-3.5" /> {p.unit_count} unit{p.unit_count === 1 ? "" : "s"}
+        <div className="premium-card divide-y divide-border overflow-hidden p-0">
+          {properties.map((p) => (
+            <Link
+              key={p.id}
+              href={`/dashboard/properties/${p.id}`}
+              className="flex items-center gap-3.5 px-4 py-3.5 transition-colors hover:bg-surface-2"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Building2 className="h-4.5 w-4.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13.5px] font-medium text-foreground">{p.name}</p>
+                {p.address && (
+                  <p className="mt-0.5 flex items-center gap-1 truncate text-[12.5px] text-muted">
+                    <MapPin className="h-3 w-3 shrink-0" /> {p.address}
                   </p>
-                </div>
-              </Card>
+                )}
+              </div>
+              <p className="hidden shrink-0 items-center gap-1.5 text-[12.5px] text-muted sm:flex">
+                <DoorOpen className="h-3.5 w-3.5" /> {p.unit_count} unit{p.unit_count === 1 ? "" : "s"}
+              </p>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted" />
             </Link>
           ))}
         </div>

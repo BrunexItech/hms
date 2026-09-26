@@ -8,19 +8,25 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FullPageSpinner } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/toast";
-import { listOrgModules, reactivateOrganization, suspendOrganization, toggleOrgModule } from "@/lib/endpoints";
-import { ModuleInfo } from "@/lib/types";
+import { listOrgAuditLogs, listOrgModules, reactivateOrganization, suspendOrganization, toggleOrgModule } from "@/lib/endpoints";
+import { AuditLogEntry, ModuleInfo } from "@/lib/types";
 import { resolveIcon } from "@/lib/icon-map";
 import { ApiError } from "@/lib/api";
+
+function describeAction(action: string): string {
+  return action.replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export default function OrganizationDetailPage({ params }: PageProps<"/admin/organizations/[id]">) {
   const { id: orgId } = use(params);
   const { notify } = useToast();
   const [modules, setModules] = useState<ModuleInfo[] | null>(null);
+  const [logs, setLogs] = useState<AuditLogEntry[] | null>(null);
   const [busyModule, setBusyModule] = useState<string | null>(null);
 
   async function refresh() {
     setModules(await listOrgModules(orgId));
+    setLogs(await listOrgAuditLogs(orgId));
   }
 
   useEffect(() => {
@@ -63,12 +69,12 @@ export default function OrganizationDetailPage({ params }: PageProps<"/admin/org
 
   return (
     <div className="max-w-2xl">
-      <Link href="/admin" className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground">
+      <Link href="/admin" className="mb-3 inline-flex items-center gap-1.5 text-[13px] text-muted hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> Organizations
       </Link>
 
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold text-foreground">Modules</h1>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h1 className="text-[15px] font-semibold text-foreground">Modules</h1>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleSuspend}>
             <Ban className="h-3.5 w-3.5" /> Suspend
@@ -116,6 +122,26 @@ export default function OrganizationDetailPage({ params }: PageProps<"/admin/org
             );
           })}
         </div>
+      </Card>
+
+      <Card className="mt-5">
+        <CardHeader>
+          <CardTitle>Recent activity</CardTitle>
+        </CardHeader>
+        {!logs || logs.length === 0 ? (
+          <p className="py-4 text-center text-sm text-muted">Nothing recorded yet.</p>
+        ) : (
+          <div className="-mx-5 -mb-5 divide-y divide-border">
+            {logs.map((log) => (
+              <div key={log.id} className="px-5 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[13px] font-medium text-foreground">{describeAction(log.action)}</p>
+                  <p className="shrink-0 text-[11.5px] text-muted">{new Date(log.created_at).toLocaleString()}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
     </div>
   );

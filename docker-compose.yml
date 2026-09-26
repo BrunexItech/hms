@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME:-hms}
       POSTGRES_USER: ${DB_USER:-hms}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in backend/.env}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in the .env file next to docker-compose.yml}
     ports:
       - "5433:5432"
     volumes:

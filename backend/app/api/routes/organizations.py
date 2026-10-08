@@ -79,7 +79,7 @@ def get_organization(org_id: str, db: Session = Depends(get_db)):
 
 
 @router.patch("/{org_id}", response_model=OrganizationOut, dependencies=[Depends(require_super_admin)])
-def update_organization(org_id: str, payload: OrganizationUpdate, db: Session = Depends(get_db)):
+def update_organization(org_id: str, payload: OrganizationUpdate, staff: StaffUser = Depends(get_current_staff), db: Session = Depends(get_db)):
     org = db.get(Organization, org_id)
     if org is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Organization not found")
@@ -87,6 +87,7 @@ def update_organization(org_id: str, payload: OrganizationUpdate, db: Session = 
         setattr(org, field, value)
     db.commit()
     db.refresh(org)
+    record_audit(db, "super_admin", "organization.updated", organization_id=org.id, actor_id=staff.id)
     return org
 
 

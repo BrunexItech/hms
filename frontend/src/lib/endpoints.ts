@@ -87,6 +87,14 @@ export function createOrganization(payload: {
   });
 }
 
+export function getOrganization(orgId: string) {
+  return apiFetch<Organization>(`/organizations/${orgId}`, { auth: "staff" });
+}
+
+export function updateOrganization(orgId: string, payload: { name?: string; logo_url?: string; primary_color?: string }) {
+  return apiFetch<Organization>(`/organizations/${orgId}`, { method: "PATCH", auth: "staff", body: JSON.stringify(payload) });
+}
+
 export function suspendOrganization(orgId: string) {
   return apiFetch<Organization>(`/organizations/${orgId}/suspend`, { method: "POST", auth: "staff" });
 }

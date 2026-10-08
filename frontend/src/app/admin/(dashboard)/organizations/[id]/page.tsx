@@ -1,17 +1,28 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { FormEvent, use, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Ban, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Ban, CheckCircle2, Palette } from "lucide-react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input, Label } from "@/components/ui/input";
 import { FullPageSpinner } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/toast";
-import { listOrgAuditLogs, listOrgModules, reactivateOrganization, suspendOrganization, toggleOrgModule } from "@/lib/endpoints";
-import { AuditLogEntry, ModuleInfo } from "@/lib/types";
+import {
+  getOrganization,
+  listOrgAuditLogs,
+  listOrgModules,
+  reactivateOrganization,
+  suspendOrganization,
+  toggleOrgModule,
+  updateOrganization,
+} from "@/lib/endpoints";
+import { AuditLogEntry, ModuleInfo, Organization } from "@/lib/types";
 import { resolveIcon } from "@/lib/icon-map";
 import { ApiError } from "@/lib/api";
+
+const PRESET_COLORS = ["#7C3AED", "#4F46E5", "#0EA5E9", "#10B981", "#F59E0B", "#EF4444", "#EC4899"];
 
 function describeAction(action: string): string {
   return action.replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -20,11 +31,21 @@ function describeAction(action: string): string {
 export default function OrganizationDetailPage({ params }: PageProps<"/admin/organizations/[id]">) {
   const { id: orgId } = use(params);
   const { notify } = useToast();
+  const [org, setOrg] = useState<Organization | null>(null);
+  const [name, setName] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [color, setColor] = useState("#7C3AED");
+  const [savingBranding, setSavingBranding] = useState(false);
   const [modules, setModules] = useState<ModuleInfo[] | null>(null);
   const [logs, setLogs] = useState<AuditLogEntry[] | null>(null);
   const [busyModule, setBusyModule] = useState<string | null>(null);
 
   async function refresh() {
+    const o = await getOrganization(orgId);
+    setOrg(o);
+    setName(o.name);
+    setLogoUrl(o.logo_url ?? "");
+    setColor(o.primary_color);
     setModules(await listOrgModules(orgId));
     setLogs(await listOrgAuditLogs(orgId));
   }
@@ -33,6 +54,20 @@ export default function OrganizationDetailPage({ params }: PageProps<"/admin/org
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId]);
+
+  async function handleSaveBranding(e: FormEvent) {
+    e.preventDefault();
+    setSavingBranding(true);
+    try {
+      const updated = await updateOrganization(orgId, { name, logo_url: logoUrl || undefined, primary_color: color });
+      setOrg(updated);
+      notify("Branding updated");
+    } catch (err) {
+      notify(err instanceof ApiError ? err.message : "Failed to save branding", "error");
+    } finally {
+      setSavingBranding(false);
+    }
+  }
 
   async function handleToggle(mod: ModuleInfo) {
     setBusyModule(mod.id);
@@ -51,6 +86,7 @@ export default function OrganizationDetailPage({ params }: PageProps<"/admin/org
     try {
       await suspendOrganization(orgId);
       notify("Organization suspended");
+      await refresh();
     } catch (err) {
       notify(err instanceof ApiError ? err.message : "Failed to suspend organization", "error");
     }
@@ -60,12 +96,13 @@ export default function OrganizationDetailPage({ params }: PageProps<"/admin/org
     try {
       await reactivateOrganization(orgId);
       notify("Organization reactivated");
+      await refresh();
     } catch (err) {
       notify(err instanceof ApiError ? err.message : "Failed to reactivate organization", "error");
     }
   }
 
-  if (!modules) return <FullPageSpinner />;
+  if (!org || !modules) return <FullPageSpinner />;
 
   return (
     <div className="max-w-2xl">
@@ -74,7 +111,10 @@ export default function OrganizationDetailPage({ params }: PageProps<"/admin/org
       </Link>
 
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h1 className="text-[15px] font-semibold text-foreground">Modules</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-[15px] font-semibold text-foreground">{org.name}</h1>
+          <Badge tone={org.is_active ? "success" : "danger"}>{org.is_active ? "Active" : "Suspended"}</Badge>
+        </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleSuspend}>
             <Ban className="h-3.5 w-3.5" /> Suspend
@@ -86,6 +126,62 @@ export default function OrganizationDetailPage({ params }: PageProps<"/admin/org
       </div>
 
       <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Palette className="h-4 w-4 text-primary" /> Branding
+          </CardTitle>
+        </CardHeader>
+        <form onSubmit={handleSaveBranding} className="space-y-5">
+          <div>
+            <Label htmlFor="org-name">Business name</Label>
+            <Input id="org-name" required value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div>
+            <Label htmlFor="org-logo">Logo URL (optional)</Label>
+            <Input id="org-logo" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://..." />
+          </div>
+          <div>
+            <Label>Brand color</Label>
+            <div className="flex flex-wrap items-center gap-2.5">
+              {PRESET_COLORS.map((c) => (
+                <button
+                  type="button"
+                  key={c}
+                  onClick={() => setColor(c)}
+                  className="h-9 w-9 rounded-full border-2 transition-transform hover:scale-105 cursor-pointer"
+                  style={{ background: c, borderColor: color === c ? "var(--foreground)" : "transparent" }}
+                  aria-label={c}
+                />
+              ))}
+              <input
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="h-9 w-9 cursor-pointer rounded-full border border-border bg-transparent p-0"
+              />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border p-4">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">Preview</p>
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl text-white shadow" style={{ background: color }}>
+                {name.charAt(0).toUpperCase() || "?"}
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">{name || "This business"}</p>
+                <p className="text-xs text-muted">This is how residents will see their landlord&apos;s brand</p>
+              </div>
+            </div>
+          </div>
+
+          <Button type="submit" loading={savingBranding}>
+            Save branding
+          </Button>
+        </form>
+      </Card>
+
+      <Card className="mt-5">
         <CardHeader>
           <CardTitle>Feature access</CardTitle>
         </CardHeader>

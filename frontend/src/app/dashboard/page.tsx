@@ -25,48 +25,52 @@ export default function DashboardOverview() {
 
   if (!summary) return <FullPageSpinner />;
 
+  const heroSubtitle = summary.properties_enabled
+    ? `${summary.total_properties ?? 0} propert${(summary.total_properties ?? 0) === 1 ? "y" : "ies"} · ${summary.occupancy_rate ?? 0}% occupied`
+    : "Welcome back";
+
   return (
     <div>
       {brand && heroPhoto ? (
-        <div className="relative mb-4 h-44 w-full overflow-hidden rounded-2xl shadow-sm sm:h-56">
+        <div className="relative mb-5 h-64 w-full overflow-hidden rounded-2xl shadow-lg sm:h-80">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={resolveImageUrl(heroPhoto) ?? undefined} alt={brand.name} className="h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 p-5">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/5" />
+          <div className="absolute inset-x-0 bottom-0 flex items-center gap-4 p-6 sm:p-8">
             <div
-              className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl text-white shadow-md ring-2 ring-white/70"
+              className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-white shadow-lg ring-2 ring-white/80 sm:h-[72px] sm:w-[72px]"
               style={{ background: brand.color }}
             >
               {brand.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={resolveImageUrl(brand.logoUrl) ?? undefined} alt={brand.name} className="h-full w-full object-cover" />
               ) : (
-                <Building2 className="h-6 w-6" />
+                <Building2 className="h-8 w-8" />
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-medium text-white/80">Welcome back</p>
-              <h2 className="truncate text-lg font-semibold text-white">{brand.name}</h2>
+              <h2 className="font-display truncate text-2xl font-bold text-white sm:text-3xl">{brand.name}</h2>
+              <p className="mt-0.5 text-[13px] font-medium text-white/85 sm:text-sm">{heroSubtitle}</p>
             </div>
           </div>
         </div>
       ) : (
         brand && (
           <div
-            className="mb-4 flex items-center gap-4 overflow-hidden rounded-2xl p-5 text-white shadow-sm"
+            className="mb-5 flex items-center gap-4 overflow-hidden rounded-2xl p-6 text-white shadow-md sm:p-7"
             style={{ background: `linear-gradient(135deg, ${brand.color}, color-mix(in srgb, ${brand.color} 55%, black))` }}
           >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/15 backdrop-blur-sm">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/15 shadow-inner backdrop-blur-sm sm:h-16 sm:w-16">
               {brand.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={resolveImageUrl(brand.logoUrl) ?? undefined} alt={brand.name} className="h-full w-full object-cover" />
               ) : (
-                <Building2 className="h-6 w-6" />
+                <Building2 className="h-7 w-7" />
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-medium text-white/70">Welcome back</p>
-              <h2 className="truncate text-lg font-semibold">{brand.name}</h2>
+              <h2 className="font-display truncate text-xl font-bold sm:text-2xl">{brand.name}</h2>
+              <p className="mt-0.5 text-[13px] font-medium text-white/80">{heroSubtitle}</p>
             </div>
           </div>
         )

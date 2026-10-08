@@ -37,9 +37,12 @@ export default function SettingsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const updated = await updateMyOrganization({ name, logo_url: logoUrl ?? "", primary_color: color });
-      setOrg(updated);
+      await updateMyOrganization({ name, logo_url: logoUrl ?? "", primary_color: color });
       notify("Branding updated");
+      // The sidebar (in the layout above this page) only fetches branding
+      // once on load — reload so it picks up the change immediately.
+      window.location.reload();
+      return;
     } catch (err) {
       notify(err instanceof ApiError ? err.message : "Failed to save settings", "error");
     } finally {

@@ -50,9 +50,9 @@ export function AppShell({
         <div
           className={clsx(
             "flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg text-white",
-            !brandLogoUrl && "premium-gradient"
+            !brandColor && "premium-gradient"
           )}
-          style={brandLogoUrl ? { background: brandColor } : undefined}
+          style={brandColor ? { background: brandColor } : undefined}
         >
           {brandLogoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element

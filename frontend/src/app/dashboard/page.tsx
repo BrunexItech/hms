@@ -8,9 +8,12 @@ import { BarTrendChart } from "@/components/ui/bar-trend-chart";
 import { FullPageSpinner } from "@/components/ui/spinner";
 import { getDashboardSummary } from "@/lib/endpoints";
 import { DashboardSummary } from "@/lib/types";
+import { useBrand } from "@/lib/brand-context";
+import { resolveImageUrl } from "@/lib/config";
 
 export default function DashboardOverview() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const brand = useBrand();
 
   useEffect(() => {
     getDashboardSummary().then(setSummary);
@@ -20,6 +23,25 @@ export default function DashboardOverview() {
 
   return (
     <div>
+      {brand && (
+        <div
+          className="mb-4 flex items-center gap-4 overflow-hidden rounded-2xl p-5 text-white shadow-sm"
+          style={{ background: `linear-gradient(135deg, ${brand.color}, color-mix(in srgb, ${brand.color} 55%, black))` }}
+        >
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/15 backdrop-blur-sm">
+            {brand.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={resolveImageUrl(brand.logoUrl) ?? undefined} alt={brand.name} className="h-full w-full object-cover" />
+            ) : (
+              <Building2 className="h-6 w-6" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-white/70">Welcome back</p>
+            <h2 className="truncate text-lg font-semibold">{brand.name}</h2>
+          </div>
+        </div>
+      )}
       <h1 className="mb-4 text-[15px] font-semibold text-foreground">Overview</h1>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

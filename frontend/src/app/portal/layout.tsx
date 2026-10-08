@@ -8,6 +8,7 @@ import { FullPageSpinner } from "@/components/ui/spinner";
 import { TenantSessionProvider, useTenantSession } from "@/lib/use-tenant-session";
 import { resolveIcon } from "@/lib/icon-map";
 import { tenantLogout } from "@/lib/endpoints";
+import { BrandProvider } from "@/lib/brand-context";
 
 const MODULE_ROUTES: Record<string, string> = {
   rent: "/portal/rent",
@@ -47,7 +48,11 @@ function PortalChrome({ children }: { children: ReactNode }) {
         router.replace("/access");
       }}
     >
-      {children}
+      <BrandProvider
+        brand={{ name: tenant.organization_name, logoUrl: tenant.organization_logo_url, color: tenant.organization_primary_color }}
+      >
+        {children}
+      </BrandProvider>
     </AppShell>
   );
 }

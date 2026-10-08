@@ -9,6 +9,7 @@ import { StaffSessionProvider, useStaffSession } from "@/lib/use-staff-session";
 import { resolveIcon } from "@/lib/icon-map";
 import { getMyOrganization, staffLogout } from "@/lib/endpoints";
 import { Organization } from "@/lib/types";
+import { BrandProvider } from "@/lib/brand-context";
 
 const MODULE_ROUTES: Record<string, string> = {
   properties: "/dashboard/properties",
@@ -58,7 +59,11 @@ function DashboardChrome({ children }: { children: ReactNode }) {
         router.replace("/login");
       }}
     >
-      {children}
+      {org ? (
+        <BrandProvider brand={{ name: org.name, logoUrl: org.logo_url, color: org.primary_color }}>{children}</BrandProvider>
+      ) : (
+        children
+      )}
     </AppShell>
   );
 }

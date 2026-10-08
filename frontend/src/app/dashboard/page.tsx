@@ -6,41 +6,70 @@ import { StatCard } from "@/components/ui/stat-card";
 import { Card } from "@/components/ui/card";
 import { BarTrendChart } from "@/components/ui/bar-trend-chart";
 import { FullPageSpinner } from "@/components/ui/spinner";
-import { getDashboardSummary } from "@/lib/endpoints";
+import { getDashboardSummary, listProperties } from "@/lib/endpoints";
 import { DashboardSummary } from "@/lib/types";
 import { useBrand } from "@/lib/brand-context";
 import { resolveImageUrl } from "@/lib/config";
 
 export default function DashboardOverview() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [heroPhoto, setHeroPhoto] = useState<string | null>(null);
   const brand = useBrand();
 
   useEffect(() => {
     getDashboardSummary().then(setSummary);
+    listProperties()
+      .then((props) => setHeroPhoto(props.find((p) => p.photo_url)?.photo_url ?? null))
+      .catch(() => setHeroPhoto(null));
   }, []);
 
   if (!summary) return <FullPageSpinner />;
 
   return (
     <div>
-      {brand && (
-        <div
-          className="mb-4 flex items-center gap-4 overflow-hidden rounded-2xl p-5 text-white shadow-sm"
-          style={{ background: `linear-gradient(135deg, ${brand.color}, color-mix(in srgb, ${brand.color} 55%, black))` }}
-        >
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/15 backdrop-blur-sm">
-            {brand.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={resolveImageUrl(brand.logoUrl) ?? undefined} alt={brand.name} className="h-full w-full object-cover" />
-            ) : (
-              <Building2 className="h-6 w-6" />
-            )}
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-medium text-white/70">Welcome back</p>
-            <h2 className="truncate text-lg font-semibold">{brand.name}</h2>
+      {brand && heroPhoto ? (
+        <div className="relative mb-4 h-44 w-full overflow-hidden rounded-2xl shadow-sm sm:h-56">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={resolveImageUrl(heroPhoto) ?? undefined} alt={brand.name} className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 p-5">
+            <div
+              className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl text-white shadow-md ring-2 ring-white/70"
+              style={{ background: brand.color }}
+            >
+              {brand.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={resolveImageUrl(brand.logoUrl) ?? undefined} alt={brand.name} className="h-full w-full object-cover" />
+              ) : (
+                <Building2 className="h-6 w-6" />
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-white/80">Welcome back</p>
+              <h2 className="truncate text-lg font-semibold text-white">{brand.name}</h2>
+            </div>
           </div>
         </div>
+      ) : (
+        brand && (
+          <div
+            className="mb-4 flex items-center gap-4 overflow-hidden rounded-2xl p-5 text-white shadow-sm"
+            style={{ background: `linear-gradient(135deg, ${brand.color}, color-mix(in srgb, ${brand.color} 55%, black))` }}
+          >
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/15 backdrop-blur-sm">
+              {brand.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={resolveImageUrl(brand.logoUrl) ?? undefined} alt={brand.name} className="h-full w-full object-cover" />
+              ) : (
+                <Building2 className="h-6 w-6" />
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-white/70">Welcome back</p>
+              <h2 className="truncate text-lg font-semibold">{brand.name}</h2>
+            </div>
+          </div>
+        )
       )}
       <h1 className="mb-4 text-[15px] font-semibold text-foreground">Overview</h1>
 

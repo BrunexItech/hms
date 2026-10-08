@@ -1,0 +1,53 @@
+# Production stack for a single VPS behind host nginx (see README.md →
+# "Going to production"). Postgres is NOT published to the host — only the
+# backend reaches it, over the internal compose network.
+#
+# Usage:
+#   cp .env.prod.example .env
+#   cp backend/.env.example backend/.env   # then edit both with real values
+#   docker-compose -f docker-compose.prod.yml up -d --build
+#   docker-compose -f docker-compose.prod.yml exec backend python seed.py
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-hms}
+      POSTGRES_USER: ${DB_USER:-hms}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    volumes:
+      - hms_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-hms} -d ${DB_NAME:-hms}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [internal]
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8003}:8000"
+    networks: [internal]
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: /api/v1
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3002}:3000"
+    networks: [internal]
+
+networks:
+  internal:
+
+volumes:
+  hms_postgres_data:

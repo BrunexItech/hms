@@ -1,13 +1,14 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { History, LayoutDashboard, Settings, Users2 } from "lucide-react";
 import { AppShell, NavItem } from "@/components/shell/app-shell";
 import { FullPageSpinner } from "@/components/ui/spinner";
 import { StaffSessionProvider, useStaffSession } from "@/lib/use-staff-session";
 import { resolveIcon } from "@/lib/icon-map";
-import { staffLogout } from "@/lib/endpoints";
+import { getMyOrganization, staffLogout } from "@/lib/endpoints";
+import { Organization } from "@/lib/types";
 
 const MODULE_ROUTES: Record<string, string> = {
   properties: "/dashboard/properties",
@@ -25,6 +26,11 @@ const byModuleOrder = (a: { key: string }, b: { key: string }) =>
 function DashboardChrome({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { staff, modules, loading } = useStaffSession();
+  const [org, setOrg] = useState<Organization | null>(null);
+
+  useEffect(() => {
+    if (staff) getMyOrganization().then(setOrg);
+  }, [staff]);
 
   if (loading || !staff) return <FullPageSpinner />;
 
@@ -41,8 +47,10 @@ function DashboardChrome({ children }: { children: ReactNode }) {
   return (
     <AppShell
       navItems={navItems}
-      brandName="HMS"
+      brandName={org?.name ?? "HMS"}
       brandSubtitle={staff.role === "owner" ? "Owner" : "Property Manager"}
+      brandLogoUrl={org?.logo_url}
+      brandColor={org?.primary_color}
       userName={staff.full_name}
       userMeta={staff.email}
       onLogout={async () => {

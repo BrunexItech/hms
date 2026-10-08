@@ -38,6 +38,8 @@ function PortalChrome({ children }: { children: ReactNode }) {
       navItems={navItems}
       brandName={tenant.organization_name}
       brandSubtitle={`${tenant.property_name} · Unit ${tenant.unit_name}`}
+      brandLogoUrl={tenant.organization_logo_url}
+      brandColor={tenant.organization_primary_color}
       userName={tenant.full_name}
       userMeta={tenant.email}
       onLogout={async () => {

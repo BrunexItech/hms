@@ -7,11 +7,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Input, Label } from "@/components/ui/input";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { FullPageSpinner } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/toast";
 import { createProperty, listProperties } from "@/lib/endpoints";
 import { Property } from "@/lib/types";
 import { ApiError } from "@/lib/api";
+import { resolveImageUrl } from "@/lib/config";
 
 export default function PropertiesPage() {
   const { notify } = useToast();
@@ -19,6 +21,7 @@ export default function PropertiesPage() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   async function refresh() {
@@ -33,11 +36,12 @@ export default function PropertiesPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      await createProperty({ name, address: address || undefined });
+      await createProperty({ name, address: address || undefined, photo_url: photoUrl || undefined });
       notify("Property created");
       setOpen(false);
       setName("");
       setAddress("");
+      setPhotoUrl(null);
       await refresh();
     } catch (err) {
       notify(err instanceof ApiError ? err.message : "Failed to create property", "error");
@@ -71,8 +75,13 @@ export default function PropertiesPage() {
               href={`/dashboard/properties/${p.id}`}
               className="flex items-center gap-3.5 px-4 py-3.5 transition-colors hover:bg-surface-2"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <Building2 className="h-4.5 w-4.5" />
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10 text-primary">
+                {p.photo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={resolveImageUrl(p.photo_url) ?? undefined} alt={p.name} className="h-full w-full object-cover" />
+                ) : (
+                  <Building2 className="h-4.5 w-4.5" />
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13.5px] font-medium text-foreground">{p.name}</p>
@@ -100,6 +109,10 @@ export default function PropertiesPage() {
           <div>
             <Label htmlFor="p-address">Address (optional)</Label>
             <Input id="p-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="e.g. Nairobi, Kenya" />
+          </div>
+          <div>
+            <Label>Photo (optional)</Label>
+            <ImageUpload value={photoUrl} onChange={setPhotoUrl} label="photo" />
           </div>
           <Button type="submit" className="w-full" loading={saving}>
             Create property

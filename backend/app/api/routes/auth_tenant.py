@@ -144,6 +144,8 @@ def _to_tenant_me(tenancy: Tenancy) -> TenantMe:
         property_name=tenancy.unit.property.name,
         organization_id=tenancy.unit.property.organization_id,
         organization_name=tenancy.unit.property.organization.name,
+        organization_logo_url=tenancy.unit.property.organization.logo_url,
+        organization_primary_color=tenancy.unit.property.organization.primary_color,
     )
 
 

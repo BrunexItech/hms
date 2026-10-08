@@ -14,6 +14,7 @@ from app.api.routes import (
     staff,
     tenancies,
     units,
+    uploads,
     utilities,
     visitors,
 )
@@ -34,3 +35,4 @@ api_router.include_router(rent.router)
 api_router.include_router(staff.router)
 api_router.include_router(audit_logs.router)
 api_router.include_router(dashboard.router)
+api_router.include_router(uploads.router)

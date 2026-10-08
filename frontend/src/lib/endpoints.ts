@@ -175,8 +175,12 @@ export function listProperties() {
   return apiFetch<Property[]>("/properties", { auth: "staff" });
 }
 
-export function createProperty(payload: { name: string; address?: string }) {
+export function createProperty(payload: { name: string; address?: string; photo_url?: string }) {
   return apiFetch<Property>("/properties", { method: "POST", auth: "staff", body: JSON.stringify(payload) });
+}
+
+export function updateProperty(propertyId: string, payload: { name?: string; address?: string; photo_url?: string | null }) {
+  return apiFetch<Property>(`/properties/${propertyId}`, { method: "PATCH", auth: "staff", body: JSON.stringify(payload) });
 }
 
 export function deleteProperty(propertyId: string) {
@@ -185,6 +189,10 @@ export function deleteProperty(propertyId: string) {
 
 export function listAllUnits() {
   return apiFetch<Unit[]>("/units", { auth: "staff" });
+}
+
+export function getProperty(propertyId: string) {
+  return apiFetch<Property>(`/properties/${propertyId}`, { auth: "staff" });
 }
 
 export function listUnits(propertyId: string) {

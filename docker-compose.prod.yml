@@ -34,6 +34,8 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8003}:8000"
+    volumes:
+      - hms_uploads:/app/uploads
     networks: [internal]
 
   frontend:
@@ -51,3 +53,4 @@ networks:
 
 volumes:
   hms_postgres_data:
+  hms_uploads:

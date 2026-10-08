@@ -2,11 +2,12 @@
 
 import { use, FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, DoorOpen, Plus, QrCode as QrIcon, RefreshCw, Copy, UserPlus, Printer } from "lucide-react";
+import { ArrowLeft, Building2, DoorOpen, Pencil, Plus, QrCode as QrIcon, RefreshCw, Copy, UserPlus, Printer } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Input, Label } from "@/components/ui/input";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { Badge } from "@/components/ui/badge";
 import { QrCode } from "@/components/ui/qr-code";
 import { FullPageSpinner } from "@/components/ui/spinner";
@@ -14,21 +15,31 @@ import { useToast } from "@/components/ui/toast";
 import {
   createTenancy,
   createUnit,
+  getProperty,
   getUnitAccessLink,
   listUnits,
   regenerateUnitAccessLink,
+  updateProperty,
 } from "@/lib/endpoints";
-import { Unit } from "@/lib/types";
+import { Property, Unit } from "@/lib/types";
 import { ApiError } from "@/lib/api";
+import { resolveImageUrl } from "@/lib/config";
 
 export default function PropertyUnitsPage({ params }: PageProps<"/dashboard/properties/[id]">) {
   const { id: propertyId } = use(params);
   const { notify } = useToast();
 
+  const [property, setProperty] = useState<Property | null>(null);
   const [units, setUnits] = useState<Unit[] | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [unitName, setUnitName] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editAddress, setEditAddress] = useState("");
+  const [editPhotoUrl, setEditPhotoUrl] = useState<string | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
 
   const [accessUnit, setAccessUnit] = useState<Unit | null>(null);
   const [accessUrl, setAccessUrl] = useState<string | null>(null);
@@ -38,6 +49,11 @@ export default function PropertyUnitsPage({ params }: PageProps<"/dashboard/prop
   const [tenantSaving, setTenantSaving] = useState(false);
 
   async function refresh() {
+    const prop = await getProperty(propertyId);
+    setProperty(prop);
+    setEditName(prop.name);
+    setEditAddress(prop.address ?? "");
+    setEditPhotoUrl(prop.photo_url);
     setUnits(await listUnits(propertyId));
   }
 
@@ -45,6 +61,21 @@ export default function PropertyUnitsPage({ params }: PageProps<"/dashboard/prop
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [propertyId]);
+
+  async function handleEditProperty(e: FormEvent) {
+    e.preventDefault();
+    setEditSaving(true);
+    try {
+      await updateProperty(propertyId, { name: editName, address: editAddress || undefined, photo_url: editPhotoUrl });
+      notify("Property updated");
+      setEditOpen(false);
+      await refresh();
+    } catch (err) {
+      notify(err instanceof ApiError ? err.message : "Failed to update property", "error");
+    } finally {
+      setEditSaving(false);
+    }
+  }
 
   async function handleCreateUnit(e: FormEvent) {
     e.preventDefault();
@@ -98,7 +129,7 @@ export default function PropertyUnitsPage({ params }: PageProps<"/dashboard/prop
     }
   }
 
-  if (!units) return <FullPageSpinner />;
+  if (!units || !property) return <FullPageSpinner />;
 
   return (
     <div>
@@ -107,10 +138,28 @@ export default function PropertyUnitsPage({ params }: PageProps<"/dashboard/prop
       </Link>
 
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h1 className="text-[15px] font-semibold text-foreground">Units</h1>
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
-          <Plus className="h-3.5 w-3.5" /> New unit
-        </Button>
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10 text-primary">
+            {property.photo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={resolveImageUrl(property.photo_url) ?? undefined} alt={property.name} className="h-full w-full object-cover" />
+            ) : (
+              <Building2 className="h-5 w-5" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <h1 className="truncate text-[15px] font-semibold text-foreground">{property.name}</h1>
+            {property.address && <p className="truncate text-[12px] text-muted">{property.address}</p>}
+          </div>
+        </div>
+        <div className="flex shrink-0 gap-2">
+          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+            <Pencil className="h-3.5 w-3.5" /> Edit
+          </Button>
+          <Button size="sm" onClick={() => setCreateOpen(true)}>
+            <Plus className="h-3.5 w-3.5" /> New unit
+          </Button>
+        </div>
       </div>
 
       {units.length === 0 ? (
@@ -141,6 +190,27 @@ export default function PropertyUnitsPage({ params }: PageProps<"/dashboard/prop
           ))}
         </div>
       )}
+
+      {/* Edit property modal */}
+      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit property">
+        <form onSubmit={handleEditProperty} className="space-y-4">
+          <div>
+            <Label htmlFor="e-name">Name</Label>
+            <Input id="e-name" required value={editName} onChange={(e) => setEditName(e.target.value)} />
+          </div>
+          <div>
+            <Label htmlFor="e-address">Address (optional)</Label>
+            <Input id="e-address" value={editAddress} onChange={(e) => setEditAddress(e.target.value)} />
+          </div>
+          <div>
+            <Label>Photo</Label>
+            <ImageUpload value={editPhotoUrl} onChange={setEditPhotoUrl} label="photo" />
+          </div>
+          <Button type="submit" className="w-full" loading={editSaving}>
+            Save changes
+          </Button>
+        </form>
+      </Modal>
 
       {/* Create unit modal */}
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="New unit">

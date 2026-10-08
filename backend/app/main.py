@@ -2,12 +2,14 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app import models  # noqa: F401 — ensures every table is registered on Base.metadata
 from app.api.routes import api_router
 from app.core.config import settings
 from app.core.csrf_middleware import CSRFMiddleware
 from app.db.seed_modules import seed_modules
+from app.services.uploads import IMAGES_DIR
 
 
 @asynccontextmanager
@@ -37,6 +39,7 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+app.mount(f"{settings.API_V1_PREFIX}/uploads/images", StaticFiles(directory=IMAGES_DIR), name="uploaded-images")
 
 
 @app.get("/health")

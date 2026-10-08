@@ -7,6 +7,7 @@ import { QrCode } from "@/components/ui/qr-code";
 import { FullPageSpinner } from "@/components/ui/spinner";
 import { getUnitAccessInfo, getUnitAccessLink } from "@/lib/endpoints";
 import { UnitAccessInfo } from "@/lib/types";
+import { resolveImageUrl } from "@/lib/config";
 import { useRouter } from "next/navigation";
 
 export default function PrintUnitAccessPage({ params }: PageProps<"/print/units/[id]">) {
@@ -36,10 +37,19 @@ export default function PrintUnitAccessPage({ params }: PageProps<"/print/units/
 
       <div className="flex w-full max-w-sm flex-col items-center rounded-2xl border border-border bg-surface p-10 text-center shadow-sm print:border-2 print:border-black print:shadow-none">
         <div
-          className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl text-white"
+          className="mb-5 flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl text-white"
           style={{ background: info.organization_primary_color }}
         >
-          <Building2 className="h-7 w-7" />
+          {info.organization_logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={resolveImageUrl(info.organization_logo_url) ?? undefined}
+              alt={info.organization_name}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <Building2 className="h-7 w-7" />
+          )}
         </div>
         <p className="text-sm font-medium text-muted">{info.organization_name}</p>
         <h1 className="mt-1 text-2xl font-bold text-foreground">

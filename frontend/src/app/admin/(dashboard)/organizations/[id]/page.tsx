@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input, Label } from "@/components/ui/input";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { FullPageSpinner } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/toast";
 import {
@@ -21,6 +22,7 @@ import {
 import { AuditLogEntry, ModuleInfo, Organization } from "@/lib/types";
 import { resolveIcon } from "@/lib/icon-map";
 import { ApiError } from "@/lib/api";
+import { resolveImageUrl } from "@/lib/config";
 
 const PRESET_COLORS = ["#7C3AED", "#4F46E5", "#0EA5E9", "#10B981", "#F59E0B", "#EF4444", "#EC4899"];
 
@@ -33,7 +35,7 @@ export default function OrganizationDetailPage({ params }: PageProps<"/admin/org
   const { notify } = useToast();
   const [org, setOrg] = useState<Organization | null>(null);
   const [name, setName] = useState("");
-  const [logoUrl, setLogoUrl] = useState("");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [color, setColor] = useState("#7C3AED");
   const [savingBranding, setSavingBranding] = useState(false);
   const [modules, setModules] = useState<ModuleInfo[] | null>(null);
@@ -44,7 +46,7 @@ export default function OrganizationDetailPage({ params }: PageProps<"/admin/org
     const o = await getOrganization(orgId);
     setOrg(o);
     setName(o.name);
-    setLogoUrl(o.logo_url ?? "");
+    setLogoUrl(o.logo_url);
     setColor(o.primary_color);
     setModules(await listOrgModules(orgId));
     setLogs(await listOrgAuditLogs(orgId));
@@ -59,7 +61,7 @@ export default function OrganizationDetailPage({ params }: PageProps<"/admin/org
     e.preventDefault();
     setSavingBranding(true);
     try {
-      const updated = await updateOrganization(orgId, { name, logo_url: logoUrl || undefined, primary_color: color });
+      const updated = await updateOrganization(orgId, { name, logo_url: logoUrl ?? "", primary_color: color });
       setOrg(updated);
       notify("Branding updated");
     } catch (err) {
@@ -137,8 +139,8 @@ export default function OrganizationDetailPage({ params }: PageProps<"/admin/org
             <Input id="org-name" required value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div>
-            <Label htmlFor="org-logo">Logo URL (optional)</Label>
-            <Input id="org-logo" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://..." />
+            <Label>Logo</Label>
+            <ImageUpload value={logoUrl} onChange={setLogoUrl} label="logo" shape="circle" />
           </div>
           <div>
             <Label>Brand color</Label>
@@ -165,8 +167,16 @@ export default function OrganizationDetailPage({ params }: PageProps<"/admin/org
           <div className="rounded-xl border border-border p-4">
             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">Preview</p>
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl text-white shadow" style={{ background: color }}>
-                {name.charAt(0).toUpperCase() || "?"}
+              <div
+                className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl text-white shadow"
+                style={{ background: color }}
+              >
+                {logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={resolveImageUrl(logoUrl) ?? undefined} alt="Logo" className="h-full w-full object-cover" />
+                ) : (
+                  name.charAt(0).toUpperCase() || "?"
+                )}
               </div>
               <div>
                 <p className="font-semibold text-foreground">{name || "This business"}</p>

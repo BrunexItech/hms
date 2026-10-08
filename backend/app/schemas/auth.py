@@ -45,3 +45,5 @@ class TenantMe(BaseModel):
     property_name: str
     organization_id: uuid.UUID
     organization_name: str
+    organization_logo_url: str | None = None
+    organization_primary_color: str = "#7C3AED"

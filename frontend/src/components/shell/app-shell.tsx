@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { LucideIcon, Menu, LogOut, X, Building2 } from "lucide-react";
 import clsx from "clsx";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { resolveImageUrl } from "@/lib/config";
 
 export interface NavItem {
   href: string;
@@ -17,13 +18,25 @@ interface AppShellProps {
   navItems: NavItem[];
   brandName: string;
   brandSubtitle?: string;
+  brandLogoUrl?: string | null;
+  brandColor?: string;
   userName: string;
   userMeta: string;
   onLogout: () => void | Promise<void>;
   children: ReactNode;
 }
 
-export function AppShell({ navItems, brandName, brandSubtitle, userName, userMeta, onLogout, children }: AppShellProps) {
+export function AppShell({
+  navItems,
+  brandName,
+  brandSubtitle,
+  brandLogoUrl,
+  brandColor,
+  userName,
+  userMeta,
+  onLogout,
+  children,
+}: AppShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -34,8 +47,19 @@ export function AppShell({ navItems, brandName, brandSubtitle, userName, userMet
   const sidebarContent = (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2.5 px-4 py-4">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg premium-gradient text-white shrink-0">
-          <Building2 className="h-4 w-4" />
+        <div
+          className={clsx(
+            "flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg text-white",
+            !brandLogoUrl && "premium-gradient"
+          )}
+          style={brandLogoUrl ? { background: brandColor } : undefined}
+        >
+          {brandLogoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={resolveImageUrl(brandLogoUrl) ?? undefined} alt={brandName} className="h-full w-full object-cover" />
+          ) : (
+            <Building2 className="h-4 w-4" />
+          )}
         </div>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-foreground">{brandName}</p>

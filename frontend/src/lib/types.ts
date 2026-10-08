@@ -19,6 +19,8 @@ export interface TenantMe {
   property_name: string;
   organization_id: string;
   organization_name: string;
+  organization_logo_url: string | null;
+  organization_primary_color: string;
 }
 
 export interface Organization {
@@ -35,6 +37,7 @@ export interface Property {
   id: string;
   name: string;
   address: string | null;
+  photo_url: string | null;
   unit_count: number;
   created_at: string;
 }

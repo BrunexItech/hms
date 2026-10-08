@@ -17,6 +17,7 @@ class Property(UUIDPKMixin, TimestampMixin, Base):
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     address: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    photo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     organization: Mapped["Organization"] = relationship(back_populates="properties")
     units: Mapped[list["Unit"]] = relationship(

@@ -73,3 +73,31 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }
+
+/** Multipart upload — separate from apiFetch because it must NOT set a
+ * Content-Type header itself (the browser sets the multipart boundary). */
+export async function uploadImage(file: File): Promise<{ url: string }> {
+  const form = new FormData();
+  form.append("file", file);
+  const headers: Record<string, string> = {};
+  const csrf = getCsrfToken();
+  if (csrf) headers["X-CSRF-Token"] = csrf;
+
+  const res = await fetch(`${API_BASE_URL}/uploads/images`, {
+    method: "POST",
+    credentials: "include",
+    headers,
+    body: form,
+  });
+
+  if (!res.ok) {
+    let body: unknown = null;
+    try {
+      body = await res.json();
+    } catch {
+      // no JSON body
+    }
+    throw new ApiError(res.status, extractMessage(body, `Upload failed (${res.status})`), body);
+  }
+  return res.json();
+}

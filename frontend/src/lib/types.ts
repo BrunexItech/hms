@@ -17,6 +17,7 @@ export interface TenantMe {
   unit_id: string;
   unit_name: string;
   property_name: string;
+  property_photo_url: string | null;
   organization_id: string;
   organization_name: string;
   organization_logo_url: string | null;
@@ -127,6 +128,7 @@ export interface UtilityBill {
 export interface UnitAccessInfo {
   unit_name: string;
   property_name: string;
+  property_photo_url: string | null;
   organization_name: string;
   organization_logo_url: string | null;
   organization_primary_color: string;

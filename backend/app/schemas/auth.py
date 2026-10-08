@@ -43,6 +43,7 @@ class TenantMe(BaseModel):
     unit_id: uuid.UUID
     unit_name: str
     property_name: str
+    property_photo_url: str | None = None
     organization_id: uuid.UUID
     organization_name: str
     organization_logo_url: str | None = None

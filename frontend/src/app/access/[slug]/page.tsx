@@ -57,22 +57,50 @@ export default function TenantAccessPage({ params }: PageProps<"/access/[slug]">
       </header>
       <main className="flex flex-1 items-center justify-center px-6 py-10">
         <div className="w-full max-w-sm">
-          <div className="mb-8 text-center">
-            <div
-              className="mx-auto mb-4 flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl text-white shadow-md"
-              style={{ background: info.organization_primary_color }}
-            >
-              {info.organization_logo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={resolveImageUrl(info.organization_logo_url) ?? undefined}
-                  alt={info.organization_name}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <Building2 className="h-7 w-7" />
-              )}
-            </div>
+          <div className={`text-center ${info.property_photo_url ? "mb-12" : "mb-8"}`}>
+            {info.property_photo_url ? (
+              <div className="relative mb-8">
+                <div className="h-32 w-full overflow-hidden rounded-2xl shadow-md">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={resolveImageUrl(info.property_photo_url) ?? undefined}
+                    alt={info.property_name}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div
+                  className="absolute -bottom-7 left-1/2 flex h-14 w-14 -translate-x-1/2 items-center justify-center overflow-hidden rounded-2xl text-white shadow-md ring-4 ring-background"
+                  style={{ background: info.organization_primary_color }}
+                >
+                  {info.organization_logo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={resolveImageUrl(info.organization_logo_url) ?? undefined}
+                      alt={info.organization_name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <Building2 className="h-7 w-7" />
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div
+                className="mx-auto mb-4 flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl text-white shadow-md"
+                style={{ background: info.organization_primary_color }}
+              >
+                {info.organization_logo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={resolveImageUrl(info.organization_logo_url) ?? undefined}
+                    alt={info.organization_name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <Building2 className="h-7 w-7" />
+                )}
+              </div>
+            )}
             <h1 className="text-xl font-semibold text-foreground">{info.organization_name}</h1>
             <p className="mt-1 text-sm text-muted">
               {info.property_name} · Unit {info.unit_name}

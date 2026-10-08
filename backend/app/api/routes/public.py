@@ -11,6 +11,7 @@ router = APIRouter(prefix="/public", tags=["public"])
 class UnitAccessInfo(BaseModel):
     unit_name: str
     property_name: str
+    property_photo_url: str | None
     organization_name: str
     organization_logo_url: str | None
     organization_primary_color: str
@@ -25,6 +26,7 @@ def get_unit_access_info(access_slug: str, db: Session = Depends(get_db)):
     return UnitAccessInfo(
         unit_name=unit.name,
         property_name=unit.property.name,
+        property_photo_url=unit.property.photo_url,
         organization_name=org.name,
         organization_logo_url=org.logo_url,
         organization_primary_color=org.primary_color,

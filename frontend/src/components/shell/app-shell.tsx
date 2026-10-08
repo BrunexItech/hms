@@ -52,7 +52,7 @@ export function AppShell({
             "flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg text-white",
             !brandColor && "premium-gradient"
           )}
-          style={brandColor ? { background: brandColor } : undefined}
+          style={brandColor ? { background: brandColor, boxShadow: `0 0 0 2px ${brandColor}` } : undefined}
         >
           {brandLogoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element

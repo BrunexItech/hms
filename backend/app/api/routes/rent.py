@@ -1,6 +1,9 @@
+import csv
+import io
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import get_current_staff, get_current_tenancy, require_module, require_module_for_tenant
@@ -119,6 +122,59 @@ def list_org_rent_invoices(staff: StaffUser = Depends(get_current_staff), db: Se
         .all()
     )
     return [_to_out(i) for i in invoices]
+
+
+@router.get("/staff/rent-invoices/statement.csv", dependencies=[Depends(require_module(MODULE_KEY))])
+def export_rent_statement(
+    from_date: date | None = None,
+    to_date: date | None = None,
+    staff: StaffUser = Depends(get_current_staff),
+    db: Session = Depends(get_db),
+):
+    """Owner financial statement: one row per invoice, with totals, filtered
+    by due date. Streamed as CSV so it opens directly in any spreadsheet."""
+    query = (
+        db.query(RentInvoice)
+        .join(Unit, Unit.id == RentInvoice.unit_id)
+        .options(
+            joinedload(RentInvoice.unit).joinedload(Unit.property),
+            joinedload(RentInvoice.tenancy).joinedload(Tenancy.tenant),
+            joinedload(RentInvoice.payments),
+        )
+        .filter(Unit.property.has(organization_id=staff.organization_id))
+    )
+    if from_date:
+        query = query.filter(RentInvoice.due_date >= from_date)
+    if to_date:
+        query = query.filter(RentInvoice.due_date <= to_date)
+    invoices = query.order_by(RentInvoice.due_date.asc()).all()
+
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow([
+        "Property", "Unit", "Tenant", "Period start", "Period end", "Due date",
+        "Amount due", "Total paid", "Outstanding", "Status",
+    ])
+    total_due = total_paid_sum = 0.0
+    for invoice in invoices:
+        out = _to_out(invoice)
+        total_due += out.amount_due
+        total_paid_sum += out.total_paid
+        writer.writerow([
+            invoice.unit.property.name, invoice.unit.name, invoice.tenancy.tenant.full_name,
+            out.period_start, out.period_end, out.due_date,
+            f"{out.amount_due:.2f}", f"{out.total_paid:.2f}", f"{out.amount_due - out.total_paid:.2f}", out.status,
+        ])
+    writer.writerow([])
+    writer.writerow(["", "", "", "", "", "Totals", f"{total_due:.2f}", f"{total_paid_sum:.2f}", f"{total_due - total_paid_sum:.2f}", ""])
+
+    buffer.seek(0)
+    filename = f"rent-statement-{from_date or 'all'}-to-{to_date or 'all'}.csv"
+    return StreamingResponse(
+        iter([buffer.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.post(

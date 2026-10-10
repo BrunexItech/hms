@@ -14,6 +14,9 @@ class ComplaintCreate(BaseModel):
 
 class ComplaintUpdate(BaseModel):
     status: ComplaintStatus
+    vendor_name: str | None = None
+    vendor_contact: str | None = None
+    cost: float | None = None
 
 
 class ComplaintOut(BaseModel):
@@ -22,6 +25,9 @@ class ComplaintOut(BaseModel):
     description: str
     status: ComplaintStatus
     priority: ComplaintPriority
+    vendor_name: str | None = None
+    vendor_contact: str | None = None
+    cost: float | None = None
     created_at: datetime
     tenant_name: str | None = None
     unit_name: str | None = None

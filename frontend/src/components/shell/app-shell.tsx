@@ -77,11 +77,18 @@ export function AppShell({
               href={item.href}
               onClick={() => setMobileOpen(false)}
               className={clsx(
-                "flex items-center gap-2.5 rounded-lg border-l-2 px-2.5 py-1.5 text-[13px] font-medium transition-colors",
-                active
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-transparent text-muted hover:bg-surface-2 hover:text-foreground"
+                "flex items-center gap-2.5 rounded-lg border-l-2 px-2.5 py-1.5 text-[13px] font-medium transition-all duration-150",
+                !active && "border-transparent text-muted hover:bg-surface-2 hover:text-foreground"
               )}
+              style={
+                active
+                  ? {
+                      borderLeftColor: brandColor ?? "var(--primary)",
+                      background: `color-mix(in srgb, ${brandColor ?? "var(--primary)"} 14%, transparent)`,
+                      color: brandColor ?? "var(--primary)",
+                    }
+                  : undefined
+              }
             >
               <Icon className="h-4 w-4 shrink-0" />
               {item.label}
@@ -133,7 +140,7 @@ export function AppShell({
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-12 items-center justify-between gap-3 border-b border-border bg-surface px-4 sm:px-6">
+        <header className="glass sticky top-0 z-30 flex h-12 items-center justify-between gap-3 border-b border-border/60 px-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <button
               onClick={() => setMobileOpen(true)}

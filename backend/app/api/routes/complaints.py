@@ -63,6 +63,12 @@ def update_complaint(complaint_id: str, payload: ComplaintUpdate, staff: StaffUs
     if complaint is None or complaint.tenancy.unit.property.organization_id != staff.organization_id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Complaint not found")
     complaint.status = payload.status
+    if payload.vendor_name is not None:
+        complaint.vendor_name = payload.vendor_name
+    if payload.vendor_contact is not None:
+        complaint.vendor_contact = payload.vendor_contact
+    if payload.cost is not None:
+        complaint.cost = payload.cost
     db.commit()
     db.refresh(complaint)
     return _to_out(complaint)

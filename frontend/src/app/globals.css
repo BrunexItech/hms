@@ -6,6 +6,7 @@
   --background: #f5f6fb;
   --surface: #ffffff;
   --surface-2: #edeff8;
+  --surface-3: #e3e6f3;
   --foreground: #10131c;
   --muted: #666c80;
   --border: #e1e4f0;
@@ -28,36 +29,42 @@
   --shadow-color: 222 55% 30%;
 }
 
+/* Dark is the flagship surface now — deep, layered navy-black rather than
+   a flat charcoal, so cards genuinely sit above the page instead of
+   blending into it. Light mode is kept fully working via the existing
+   toggle but is no longer designed to for pixel-parity decoration. */
 .dark {
-  --background: #10131c;
-  --surface: #1a1f2e;
-  --surface-2: #242b3d;
-  --foreground: #f4f6fb;
-  --muted: #8a90a6;
-  --border: #2b3245;
+  --background: #07080d;
+  --surface: #12141f;
+  --surface-2: #1b1e2d;
+  --surface-3: #242939;
+  --foreground: #f5f7fb;
+  --muted: #8991ab;
+  --border: #242939;
   --primary: #22c3ee;
   --primary-2: #2f6bff;
   --primary-foreground: #ffffff;
   --success: #a4e619;
   --success-2: #6fae0f;
-  --success-bg: #1e2b0a;
+  --success-bg: #1a2409;
   --warning: #ff8a3d;
   --warning-2: #ff5f3d;
-  --warning-bg: #2e1f0a;
+  --warning-bg: #291a09;
   --danger: #ff3d78;
   --danger-2: #e0225c;
-  --danger-bg: #2e0a18;
+  --danger-bg: #290915;
   --info: #8b5cf6;
   --info-2: #6d3ff0;
-  --info-bg: #1c1130;
+  --info-bg: #190f2c;
   --ring: #22c3ee;
-  --shadow-color: 222 70% 2%;
+  --shadow-color: 230 85% 1%;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-border: var(--border);

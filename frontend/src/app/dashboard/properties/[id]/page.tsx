@@ -2,7 +2,8 @@
 
 import { use, FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Building2, DoorOpen, Pencil, Plus, QrCode as QrIcon, RefreshCw, Copy, UserPlus, Printer } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Building2, DoorOpen, Pencil, Plus, QrCode as QrIcon, RefreshCw, Copy, UserPlus, Printer, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -15,6 +16,7 @@ import { useToast } from "@/components/ui/toast";
 import {
   createTenancy,
   createUnit,
+  deleteProperty,
   getProperty,
   getUnitAccessLink,
   listUnits,
@@ -29,6 +31,7 @@ import { FadeIn, StaggerList, StaggerItem } from "@/components/ui/motion";
 export default function PropertyUnitsPage({ params }: PageProps<"/dashboard/properties/[id]">) {
   const { id: propertyId } = use(params);
   const { notify } = useToast();
+  const router = useRouter();
 
   const [property, setProperty] = useState<Property | null>(null);
   const [units, setUnits] = useState<Unit[] | null>(null);
@@ -41,6 +44,10 @@ export default function PropertyUnitsPage({ params }: PageProps<"/dashboard/prop
   const [editAddress, setEditAddress] = useState("");
   const [editPhotoUrl, setEditPhotoUrl] = useState<string | null>(null);
   const [editSaving, setEditSaving] = useState(false);
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   const [accessUnit, setAccessUnit] = useState<Unit | null>(null);
   const [accessUrl, setAccessUrl] = useState<string | null>(null);
@@ -75,6 +82,18 @@ export default function PropertyUnitsPage({ params }: PageProps<"/dashboard/prop
       notify(err instanceof ApiError ? err.message : "Failed to update property", "error");
     } finally {
       setEditSaving(false);
+    }
+  }
+
+  async function handleDeleteProperty() {
+    setDeleting(true);
+    try {
+      await deleteProperty(propertyId);
+      notify("Property deleted");
+      router.push("/dashboard/properties");
+    } catch (err) {
+      notify(err instanceof ApiError ? err.message : "Failed to delete property", "error");
+      setDeleting(false);
     }
   }
 
@@ -158,6 +177,14 @@ export default function PropertyUnitsPage({ params }: PageProps<"/dashboard/prop
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <Pencil className="h-3.5 w-3.5" /> Edit
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-danger/30 text-danger hover:bg-danger-bg"
+            onClick={() => setDeleteOpen(true)}
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Delete
+          </Button>
           <Button size="sm" onClick={() => setCreateOpen(true)}>
             <Plus className="h-3.5 w-3.5" /> New unit
           </Button>
@@ -217,6 +244,49 @@ export default function PropertyUnitsPage({ params }: PageProps<"/dashboard/prop
             Save changes
           </Button>
         </form>
+      </Modal>
+
+      {/* Delete property modal */}
+      <Modal
+        open={deleteOpen}
+        onClose={() => {
+          setDeleteOpen(false);
+          setDeleteConfirmText("");
+        }}
+        title={`Delete ${property.name}`}
+      >
+        <div className="space-y-4">
+          <p className="rounded-lg bg-danger-bg px-3 py-2.5 text-sm text-danger">
+            This permanently deletes the property and every unit in it — along with all tenants, rent invoices and
+            payments, complaints, visitor bookings and utility bills tied to those units. This cannot be undone.
+          </p>
+          {units.length > 0 && (
+            <p className="text-sm text-muted">
+              {property.name} currently has {units.length} unit{units.length === 1 ? "" : "s"}
+              {units.some((u) => u.status === "occupied") ? ", including occupied ones with active residents" : ""}.
+            </p>
+          )}
+          <div>
+            <Label htmlFor="delete-confirm">
+              Type <span className="font-semibold text-foreground">{property.name}</span> to confirm
+            </Label>
+            <Input
+              id="delete-confirm"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              autoComplete="off"
+            />
+          </div>
+          <Button
+            variant="danger"
+            className="w-full"
+            disabled={deleteConfirmText !== property.name}
+            loading={deleting}
+            onClick={handleDeleteProperty}
+          >
+            <Trash2 className="h-4 w-4" /> Delete permanently
+          </Button>
+        </div>
       </Modal>
 
       {/* Create unit modal */}

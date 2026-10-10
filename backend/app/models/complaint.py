@@ -1,7 +1,7 @@
 import enum
 import uuid
 
-from sqlalchemy import Enum, ForeignKey, String, Text
+from sqlalchemy import Enum, ForeignKey, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -35,5 +35,8 @@ class Complaint(UUIDPKMixin, TimestampMixin, Base):
     priority: Mapped[ComplaintPriority] = mapped_column(
         Enum(ComplaintPriority, name="complaint_priority"), default=ComplaintPriority.MEDIUM
     )
+    vendor_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    vendor_contact: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    cost: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
 
     tenancy: Mapped["Tenancy"] = relationship(back_populates="complaints")

@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { Building2, Plus, ChevronRight, MapPin, DoorOpen } from "lucide-react";
+import { Building2, Plus, MapPin, DoorOpen } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -15,9 +15,13 @@ import { Property } from "@/lib/types";
 import { ApiError } from "@/lib/api";
 import { resolveImageUrl } from "@/lib/config";
 import { FadeIn, StaggerList, StaggerItem } from "@/components/ui/motion";
+import { ProgressiveImage } from "@/components/ui/progressive-image";
+import { BuildingGlyph } from "@/components/marketing/skyline";
+import { useBrand } from "@/lib/brand-context";
 
 export default function PropertiesPage() {
   const { notify } = useToast();
+  const brand = useBrand();
   const [properties, setProperties] = useState<Property[] | null>(null);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -55,7 +59,7 @@ export default function PropertiesPage() {
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between gap-3">
+      <div className="mb-5 flex items-center justify-between gap-3">
         <h1 className="text-[15px] font-semibold text-foreground">Properties</h1>
         <Button size="sm" onClick={() => setOpen(true)}>
           <Plus className="h-3.5 w-3.5" /> New property
@@ -71,33 +75,46 @@ export default function PropertiesPage() {
           </Card>
         </FadeIn>
       ) : (
-        <StaggerList className="premium-card divide-y divide-border overflow-hidden p-0">
+        <StaggerList className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {properties.map((p) => (
             <StaggerItem key={p.id}>
-              <Link
-                href={`/dashboard/properties/${p.id}`}
-                className="flex items-center gap-3.5 px-4 py-3.5 transition-colors hover:bg-surface-2"
-              >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10 text-primary">
-                  {p.photo_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={resolveImageUrl(p.photo_url) ?? undefined} alt={p.name} className="h-full w-full object-cover" />
-                  ) : (
-                    <Building2 className="h-4.5 w-4.5" />
-                  )}
+              <Link href={`/dashboard/properties/${p.id}`} className="group block h-full">
+                <div className="premium-card premium-card-interactive h-full overflow-hidden p-0 transition-transform duration-200 group-hover:-translate-y-1">
+                  <div className="relative h-40 w-full overflow-hidden">
+                    {p.photo_url ? (
+                      <ProgressiveImage
+                        src={resolveImageUrl(p.photo_url) ?? ""}
+                        alt={p.name}
+                        className="h-full w-full"
+                        imgClassName="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div
+                        className="flex h-full w-full items-center justify-center"
+                        style={{
+                          background: brand
+                            ? `linear-gradient(135deg, color-mix(in srgb, ${brand.color} 85%, transparent), color-mix(in srgb, ${brand.color} 45%, black))`
+                            : "linear-gradient(135deg, var(--primary), var(--primary-2))",
+                        }}
+                      >
+                        <BuildingGlyph className="h-20 w-20 text-white opacity-70" />
+                      </div>
+                    )}
+                    <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+                      <DoorOpen className="h-3 w-3" /> {p.unit_count} unit{p.unit_count === 1 ? "" : "s"}
+                    </span>
+                  </div>
+                  <div className="p-4">
+                    <p className="truncate text-[14px] font-semibold text-foreground">{p.name}</p>
+                    {p.address ? (
+                      <p className="mt-1 flex items-center gap-1 truncate text-[12.5px] text-muted">
+                        <MapPin className="h-3 w-3 shrink-0" /> {p.address}
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-[12.5px] text-muted">No address set</p>
+                    )}
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13.5px] font-medium text-foreground">{p.name}</p>
-                  {p.address && (
-                    <p className="mt-0.5 flex items-center gap-1 truncate text-[12.5px] text-muted">
-                      <MapPin className="h-3 w-3 shrink-0" /> {p.address}
-                    </p>
-                  )}
-                </div>
-                <p className="hidden shrink-0 items-center gap-1.5 text-[12.5px] text-muted sm:flex">
-                  <DoorOpen className="h-3.5 w-3.5" /> {p.unit_count} unit{p.unit_count === 1 ? "" : "s"}
-                </p>
-                <ChevronRight className="h-4 w-4 shrink-0 text-muted" />
               </Link>
             </StaggerItem>
           ))}

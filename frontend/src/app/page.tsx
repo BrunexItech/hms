@@ -7,6 +7,7 @@ import { FadeIn, StaggerList, StaggerItem, CountUp } from "@/components/ui/motio
 import { SiteHeader } from "@/components/marketing/site-header";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { AccentCard } from "@/components/marketing/accent-card";
+import { ProgressiveImage } from "@/components/ui/progressive-image";
 
 const features = [
   {
@@ -73,11 +74,11 @@ export default function Home() {
       <main className="flex-1">
         <section className="relative overflow-hidden">
           <div className="relative flex min-h-[640px] items-center overflow-hidden sm:min-h-[720px]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <ProgressiveImage
               src="/images/hero-villa.jpg"
               alt="A modern property managed on HMS"
-              className="absolute inset-0 h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full"
+              imgClassName="h-full w-full object-cover"
             />
             <div
               className="absolute inset-0"
@@ -210,11 +211,11 @@ export default function Home() {
             <FadeIn>
               <div className="relative">
                 <div className="elevated overflow-hidden rounded-3xl">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <ProgressiveImage
                     src="/images/hero-interior.jpg"
                     alt="A resident's home managed on HMS"
-                    className="h-[320px] w-full object-cover sm:h-[400px]"
+                    className="h-[320px] w-full sm:h-[400px]"
+                    imgClassName="h-full w-full object-cover"
                   />
                 </div>
                 <div

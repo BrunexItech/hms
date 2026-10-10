@@ -63,8 +63,7 @@ export function BarTrendChart({ data }: { data: MonthlyRevenuePoint[] }) {
 
   return (
     <div ref={wrapRef}>
-      <div className="mb-3 flex items-baseline justify-between">
-        <p className="text-xs text-muted">Rent collected, last 6 months</p>
+      <div className="mb-3 flex items-baseline justify-end">
         <p className="font-display text-lg font-bold tabular-nums text-foreground">
           {active.collected.toLocaleString()}
           <span className="ml-1.5 text-xs font-normal text-muted">{monthLabel(active.month)}</span>

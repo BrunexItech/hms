@@ -10,6 +10,7 @@ import { getUnitAccessInfo, requestTenantAccessLink } from "@/lib/endpoints";
 import { UnitAccessInfo } from "@/lib/types";
 import { resolveImageUrl } from "@/lib/config";
 import { FadeIn } from "@/components/ui/motion";
+import { ProgressiveImage } from "@/components/ui/progressive-image";
 
 export default function TenantAccessPage({ params }: PageProps<"/access/[slug]">) {
   const { slug } = use(params);
@@ -63,11 +64,11 @@ export default function TenantAccessPage({ params }: PageProps<"/access/[slug]">
             {info.property_photo_url ? (
               <div className="relative mb-8">
                 <div className="h-32 w-full overflow-hidden rounded-2xl shadow-md">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={resolveImageUrl(info.property_photo_url) ?? undefined}
+                  <ProgressiveImage
+                    src={resolveImageUrl(info.property_photo_url) ?? ""}
                     alt={info.property_name}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full"
+                    imgClassName="h-full w-full object-cover"
                   />
                 </div>
                 <div

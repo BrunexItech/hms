@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { staffLogin, staffLogout } from "@/lib/endpoints";
 import { ApiError } from "@/lib/api";
 import { FadeIn } from "@/components/ui/motion";
+import { ProgressiveImage } from "@/components/ui/progressive-image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -54,8 +55,12 @@ export default function LoginPage() {
     <div className="flex min-h-screen">
       {/* Photo side — hidden on small screens to keep the form the focus on mobile */}
       <div className="relative hidden w-1/2 overflow-hidden lg:block">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/hero-villa.jpg" alt="A property managed on HMS" className="absolute inset-0 h-full w-full object-cover" />
+        <ProgressiveImage
+          src="/images/hero-villa.jpg"
+          alt="A property managed on HMS"
+          className="absolute inset-0 h-full w-full"
+          imgClassName="h-full w-full object-cover"
+        />
         <div
           className="absolute inset-0"
           style={{

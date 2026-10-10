@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { useTenantSession } from "@/lib/use-tenant-session";
 import { resolveImageUrl } from "@/lib/config";
 import { FadeIn, StaggerList, StaggerItem } from "@/components/ui/motion";
+import { ProgressiveImage } from "@/components/ui/progressive-image";
 import Link from "next/link";
 
 const TONES: Record<string, string> = {
@@ -29,8 +30,12 @@ export default function PortalOverview() {
       <FadeIn>
         {tenant?.property_photo_url && (
           <div className="mb-4 h-28 w-full overflow-hidden rounded-2xl shadow-sm sm:h-36">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={resolveImageUrl(tenant.property_photo_url) ?? undefined} alt={tenant.property_name} className="h-full w-full object-cover" />
+            <ProgressiveImage
+              src={resolveImageUrl(tenant.property_photo_url) ?? ""}
+              alt={tenant.property_name}
+              className="h-full w-full"
+              imgClassName="h-full w-full object-cover"
+            />
           </div>
         )}
         <div className="mb-5">

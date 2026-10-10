@@ -20,8 +20,14 @@ export function FadeIn({ children, className, delay = 0, once = true }: FadeInPr
     <motion.div
       className={className}
       initial="hidden"
+      // A large positive margin expands the trigger zone well beyond the
+      // actual viewport, so content effectively animates in on mount
+      // instead of depending on scroll position. A negative margin here
+      // previously left content below/near the fold permanently invisible
+      // for users who never scrolled it fully into view — a real bug, not
+      // just a screenshot-tooling artifact.
       whileInView="show"
-      viewport={{ once, margin: "-80px" }}
+      viewport={{ once, margin: "2000px 0px 2000px 0px" }}
       variants={fadeUp}
       transition={{ delay }}
     >
@@ -52,7 +58,7 @@ export function StaggerList({ children, className, once = true }: StaggerListPro
       className={className}
       initial="hidden"
       whileInView="show"
-      viewport={{ once, margin: "-40px" }}
+      viewport={{ once, margin: "2000px 0px 2000px 0px" }}
       variants={container}
     >
       {children}
@@ -78,7 +84,7 @@ interface CountUpProps {
 
 export function CountUp({ value, duration = 1.2, suffix = "", prefix = "", className }: CountUpProps) {
   const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-40px" });
+  const inView = useInView(ref, { once: true, margin: "2000px 0px 2000px 0px" });
   const [display, setDisplay] = useState(0);
 
   useEffect(() => {

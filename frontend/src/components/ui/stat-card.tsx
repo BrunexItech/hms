@@ -41,7 +41,7 @@ export function StatCard({ label, value, icon: Icon, tone = "primary", hint }: S
     <div className="premium-card premium-card-interactive relative overflow-hidden p-4 transition-transform duration-150 hover:-translate-y-0.5 sm:p-5">
       <div className={clsx("absolute inset-x-0 top-0 h-[3px]", toneGradient[tone])} />
       <Icon
-        className={clsx("pointer-events-none absolute -right-3 -top-1 h-20 w-20 opacity-[0.07]", toneText[tone])}
+        className={clsx("pointer-events-none absolute -right-3 -top-1 h-20 w-20 opacity-[0.14] dark:opacity-[0.08]", toneText[tone])}
         strokeWidth={1.5}
       />
       <div className="relative">

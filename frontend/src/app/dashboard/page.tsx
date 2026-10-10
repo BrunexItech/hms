@@ -10,6 +10,7 @@ import { getDashboardSummary, listProperties } from "@/lib/endpoints";
 import { DashboardSummary } from "@/lib/types";
 import { useBrand } from "@/lib/brand-context";
 import { resolveImageUrl } from "@/lib/config";
+import { FadeIn, StaggerList, StaggerItem } from "@/components/ui/motion";
 
 export default function DashboardOverview() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
@@ -31,6 +32,7 @@ export default function DashboardOverview() {
 
   return (
     <div>
+      <FadeIn>
       {brand && heroPhoto ? (
         <div className="relative mb-5 h-64 w-full overflow-hidden rounded-2xl shadow-lg sm:h-80">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -75,58 +77,75 @@ export default function DashboardOverview() {
           </div>
         )
       )}
+      </FadeIn>
       <h1 className="mb-4 text-[15px] font-semibold text-foreground">Overview</h1>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <StaggerList className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {summary.properties_enabled && (
-          <StatCard
-            label="Occupancy"
-            value={`${summary.occupancy_rate}%`}
-            hint={`${summary.occupied_units}/${summary.total_units} units occupied`}
-            icon={Building2}
-            tone="primary"
-          />
+          <StaggerItem>
+            <StatCard
+              label="Occupancy"
+              value={`${summary.occupancy_rate}%`}
+              hint={`${summary.occupied_units}/${summary.total_units} units occupied`}
+              icon={Building2}
+              tone="primary"
+            />
+          </StaggerItem>
         )}
         {summary.tenants_enabled && (
-          <StatCard label="Active residents" value={summary.active_tenants ?? 0} icon={Users} tone="success" />
+          <StaggerItem>
+            <StatCard label="Active residents" value={summary.active_tenants ?? 0} icon={Users} tone="success" />
+          </StaggerItem>
         )}
         {summary.rent_enabled && (
-          <StatCard
-            label="Rent collected this month"
-            value={(summary.rent_collected_this_month ?? 0).toLocaleString()}
-            hint={`of ${(summary.rent_due_this_month ?? 0).toLocaleString()} due`}
-            icon={Wallet}
-            tone="success"
-          />
+          <StaggerItem>
+            <StatCard
+              label="Rent collected this month"
+              value={(summary.rent_collected_this_month ?? 0).toLocaleString()}
+              hint={`of ${(summary.rent_due_this_month ?? 0).toLocaleString()} due`}
+              icon={Wallet}
+              tone="success"
+            />
+          </StaggerItem>
         )}
         {summary.rent_enabled && (
-          <StatCard
-            label="Rent outstanding"
-            value={(summary.rent_outstanding ?? 0).toLocaleString()}
-            icon={AlertTriangle}
-            tone="warning"
-          />
+          <StaggerItem>
+            <StatCard
+              label="Rent outstanding"
+              value={(summary.rent_outstanding ?? 0).toLocaleString()}
+              icon={AlertTriangle}
+              tone="warning"
+            />
+          </StaggerItem>
         )}
         {summary.complaints_enabled && (
-          <StatCard label="Open complaints" value={summary.open_complaints ?? 0} icon={MessageSquareWarning} tone="warning" />
+          <StaggerItem>
+            <StatCard label="Open complaints" value={summary.open_complaints ?? 0} icon={MessageSquareWarning} tone="warning" />
+          </StaggerItem>
         )}
         {summary.visitor_booking_enabled && (
-          <StatCard label="Pending visitors" value={summary.pending_visitors ?? 0} icon={ScanLine} tone="info" />
+          <StaggerItem>
+            <StatCard label="Pending visitors" value={summary.pending_visitors ?? 0} icon={ScanLine} tone="info" />
+          </StaggerItem>
         )}
         {summary.utilities_enabled && (
-          <StatCard
-            label="Utilities outstanding"
-            value={(summary.utilities_outstanding ?? 0).toLocaleString()}
-            icon={Receipt}
-            tone="warning"
-          />
+          <StaggerItem>
+            <StatCard
+              label="Utilities outstanding"
+              value={(summary.utilities_outstanding ?? 0).toLocaleString()}
+              icon={Receipt}
+              tone="warning"
+            />
+          </StaggerItem>
         )}
-      </div>
+      </StaggerList>
 
       {summary.rent_enabled && summary.monthly_revenue && (
-        <Card className="mt-4">
-          <BarTrendChart data={summary.monthly_revenue} />
-        </Card>
+        <FadeIn>
+          <Card className="mt-4">
+            <BarTrendChart data={summary.monthly_revenue} />
+          </Card>
+        </FadeIn>
       )}
     </div>
   );

@@ -12,6 +12,7 @@ import { useToast } from "@/components/ui/toast";
 import { createTenantVisitorBooking, listTenantVisitorBookings } from "@/lib/endpoints";
 import { VisitorBooking, VisitorStatus } from "@/lib/types";
 import { ApiError } from "@/lib/api";
+import { FadeIn, StaggerList, StaggerItem } from "@/components/ui/motion";
 
 const statusTone: Record<VisitorStatus, "warning" | "success" | "danger" | "primary" | "neutral"> = {
   pending: "warning",
@@ -69,27 +70,31 @@ export default function TenantVisitorsPage() {
       </div>
 
       {bookings.length === 0 ? (
-        <Card className="flex flex-col items-center py-16 text-center">
-          <ScanLine className="mb-3 h-8 w-8 text-muted" />
-          <p className="text-sm font-medium text-foreground">No visitors booked yet</p>
-        </Card>
+        <FadeIn>
+          <Card className="flex flex-col items-center py-16 text-center">
+            <ScanLine className="mb-3 h-8 w-8 text-muted" />
+            <p className="text-sm font-medium text-foreground">No visitors booked yet</p>
+          </Card>
+        </FadeIn>
       ) : (
-        <div className="space-y-2">
+        <StaggerList className="space-y-2">
           {bookings.map((b) => (
-            <Card key={b.id} className="p-4">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <p className="text-[13.5px] font-semibold text-foreground">{b.visitor_name}</p>
-                  <p className="text-[12px] text-muted">
-                    {b.visit_date} {b.expected_time ? `at ${b.expected_time}` : ""}
-                    {b.purpose ? ` · ${b.purpose}` : ""}
-                  </p>
+            <StaggerItem key={b.id}>
+              <Card className="p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-[13.5px] font-semibold text-foreground">{b.visitor_name}</p>
+                    <p className="text-[12px] text-muted">
+                      {b.visit_date} {b.expected_time ? `at ${b.expected_time}` : ""}
+                      {b.purpose ? ` · ${b.purpose}` : ""}
+                    </p>
+                  </div>
+                  <Badge tone={statusTone[b.status]}>{b.status.replace("_", " ")}</Badge>
                 </div>
-                <Badge tone={statusTone[b.status]}>{b.status.replace("_", " ")}</Badge>
-              </div>
-            </Card>
+              </Card>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerList>
       )}
 
       <Modal open={open} onClose={() => setOpen(false)} title="Book a visitor">

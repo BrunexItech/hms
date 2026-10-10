@@ -8,6 +8,7 @@ import { Input, Label, PasswordInput } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { staffLogin, staffLogout } from "@/lib/endpoints";
 import { ApiError } from "@/lib/api";
+import { FadeIn } from "@/components/ui/motion";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -52,7 +53,7 @@ export default function AdminLoginPage() {
     <div className="ambient-bg flex min-h-screen flex-col bg-background">
       <header className="flex items-center justify-between px-6 py-5">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground text-background">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-info text-white">
             <ShieldCheck className="h-5 w-5" />
           </div>
           <span className="font-display text-lg font-bold text-foreground">Platform Admin</span>
@@ -62,6 +63,7 @@ export default function AdminLoginPage() {
 
       <main className="flex flex-1 items-center justify-center px-6 py-10">
         <div className="w-full max-w-sm">
+          <FadeIn>
           <div className="mb-8 text-center">
             <h1 className="text-2xl font-semibold text-foreground">Admin sign-in</h1>
             <p className="mt-1.5 text-sm text-muted">Restricted to platform super-administrators</p>
@@ -120,7 +122,7 @@ export default function AdminLoginPage() {
 
             {error && <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">{error}</p>}
 
-            <Button type="submit" variant="secondary" className="w-full border border-border" disabled={!interactive} loading={loading}>
+            <Button type="submit" className="w-full gradient-info" disabled={!interactive} loading={loading}>
               Sign in
             </Button>
           </form>
@@ -131,6 +133,7 @@ export default function AdminLoginPage() {
               Sign in at /login
             </a>
           </p>
+          </FadeIn>
         </div>
       </main>
     </div>

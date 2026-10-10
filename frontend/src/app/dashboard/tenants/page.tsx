@@ -12,6 +12,7 @@ import { useToast } from "@/components/ui/toast";
 import { disableTenancy, listTenancies, reactivateTenancy } from "@/lib/endpoints";
 import { Tenancy, TenancyStatus } from "@/lib/types";
 import { ApiError } from "@/lib/api";
+import { FadeIn, StaggerList, StaggerItem } from "@/components/ui/motion";
 
 const statusTone: Record<TenancyStatus, "success" | "neutral" | "danger"> = {
   active: "success",
@@ -69,14 +70,16 @@ export default function TenantsPage() {
       <p className="mb-4 text-[13px] text-muted">Everyone with (or who has had) access to a unit.</p>
 
       {tenancies.length === 0 ? (
-        <Card className="flex flex-col items-center py-16 text-center">
-          <Users className="mb-3 h-8 w-8 text-muted" />
-          <p className="text-sm font-medium text-foreground">No tenants registered yet</p>
-          <p className="mt-1 text-[13px] text-muted">Register a tenant from a unit&apos;s page in Properties.</p>
-        </Card>
+        <FadeIn>
+          <Card className="flex flex-col items-center py-16 text-center">
+            <Users className="mb-3 h-8 w-8 text-muted" />
+            <p className="text-sm font-medium text-foreground">No tenants registered yet</p>
+            <p className="mt-1 text-[13px] text-muted">Register a tenant from a unit&apos;s page in Properties.</p>
+          </Card>
+        </FadeIn>
       ) : (
         <>
-        <div className="hidden overflow-x-auto premium-card p-0 sm:block">
+        <FadeIn className="hidden overflow-x-auto premium-card p-0 sm:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted">
@@ -116,30 +119,32 @@ export default function TenantsPage() {
               ))}
             </tbody>
           </table>
-        </div>
-        <div className="space-y-2 sm:hidden">
+        </FadeIn>
+        <StaggerList className="space-y-2 sm:hidden">
           {tenancies.map((t) => (
-            <Card key={t.id} className="p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-[13.5px] font-semibold text-foreground">{t.full_name}</p>
-                  <p className="truncate text-[12px] text-muted">{t.email}</p>
+            <StaggerItem key={t.id}>
+              <Card className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[13.5px] font-semibold text-foreground">{t.full_name}</p>
+                    <p className="truncate text-[12px] text-muted">{t.email}</p>
+                  </div>
+                  <Badge tone={statusTone[t.status]}>{t.status}</Badge>
                 </div>
-                <Badge tone={statusTone[t.status]}>{t.status}</Badge>
-              </div>
-              <p className="mt-2 text-[12px] text-muted">{t.property_name} · {t.unit_name} · since {t.start_date}</p>
-              {t.status === "active" ? (
-                <Button variant="outline" size="sm" className="mt-3 w-full" onClick={() => setDisableTarget(t)}>
-                  <UserX className="h-3.5 w-3.5" /> Disable
-                </Button>
-              ) : (
-                <Button variant="secondary" size="sm" className="mt-3 w-full" onClick={() => handleReactivate(t)}>
-                  <UserCheck className="h-3.5 w-3.5" /> Reactivate
-                </Button>
-              )}
-            </Card>
+                <p className="mt-2 text-[12px] text-muted">{t.property_name} · {t.unit_name} · since {t.start_date}</p>
+                {t.status === "active" ? (
+                  <Button variant="outline" size="sm" className="mt-3 w-full" onClick={() => setDisableTarget(t)}>
+                    <UserX className="h-3.5 w-3.5" /> Disable
+                  </Button>
+                ) : (
+                  <Button variant="secondary" size="sm" className="mt-3 w-full" onClick={() => handleReactivate(t)}>
+                    <UserCheck className="h-3.5 w-3.5" /> Reactivate
+                  </Button>
+                )}
+              </Card>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerList>
         </>
       )}
 

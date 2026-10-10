@@ -13,6 +13,7 @@ import { deactivateStaff, inviteStaff, listStaff, reactivateStaff, resetStaffPas
 import { StaffMember } from "@/lib/types";
 import { ApiError } from "@/lib/api";
 import { useStaffSession } from "@/lib/use-staff-session";
+import { FadeIn, StaggerList, StaggerItem } from "@/components/ui/motion";
 
 export default function TeamPage() {
   const { staff } = useStaffSession();
@@ -96,44 +97,48 @@ export default function TeamPage() {
       </div>
 
       {members.length === 0 ? (
-        <Card className="flex flex-col items-center py-16 text-center">
-          <Users2 className="mb-3 h-8 w-8 text-muted" />
-          <p className="text-sm font-medium text-foreground">No team members yet</p>
-        </Card>
+        <FadeIn>
+          <Card className="flex flex-col items-center py-16 text-center">
+            <Users2 className="mb-3 h-8 w-8 text-muted" />
+            <p className="text-sm font-medium text-foreground">No team members yet</p>
+          </Card>
+        </FadeIn>
       ) : (
-        <div className="premium-card divide-y divide-border overflow-hidden p-0">
+        <StaggerList className="premium-card divide-y divide-border overflow-hidden p-0">
           {members.map((m) => (
-            <div key={m.id} className="flex flex-wrap items-center gap-3 px-4 py-3.5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-xs font-semibold text-foreground">
-                {m.full_name.charAt(0).toUpperCase()}
+            <StaggerItem key={m.id}>
+              <div className="flex flex-wrap items-center gap-3 px-4 py-3.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-xs font-semibold text-foreground">
+                  {m.full_name.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13.5px] font-medium text-foreground">{m.full_name}</p>
+                  <p className="text-[12px] text-muted">{m.email}</p>
+                </div>
+                <Badge tone="neutral">{m.role}</Badge>
+                <Badge tone={m.is_active ? "success" : "danger"}>{m.is_active ? "Active" : "Disabled"}</Badge>
+                {isOwner && m.role !== "owner" && (
+                  <Button variant="ghost" size="sm" onClick={() => setResetTarget(m)}>
+                    <KeyRound className="h-3.5 w-3.5" /> Reset password
+                  </Button>
+                )}
+                {isOwner && m.role !== "owner" && (
+                  <Button variant={m.is_active ? "outline" : "secondary"} size="sm" onClick={() => handleToggle(m)}>
+                    {m.is_active ? (
+                      <>
+                        <UserX className="h-3.5 w-3.5" /> Disable
+                      </>
+                    ) : (
+                      <>
+                        <UserCheck className="h-3.5 w-3.5" /> Restore
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[13.5px] font-medium text-foreground">{m.full_name}</p>
-                <p className="text-[12px] text-muted">{m.email}</p>
-              </div>
-              <Badge tone="neutral">{m.role}</Badge>
-              <Badge tone={m.is_active ? "success" : "danger"}>{m.is_active ? "Active" : "Disabled"}</Badge>
-              {isOwner && m.role !== "owner" && (
-                <Button variant="ghost" size="sm" onClick={() => setResetTarget(m)}>
-                  <KeyRound className="h-3.5 w-3.5" /> Reset password
-                </Button>
-              )}
-              {isOwner && m.role !== "owner" && (
-                <Button variant={m.is_active ? "outline" : "secondary"} size="sm" onClick={() => handleToggle(m)}>
-                  {m.is_active ? (
-                    <>
-                      <UserX className="h-3.5 w-3.5" /> Disable
-                    </>
-                  ) : (
-                    <>
-                      <UserCheck className="h-3.5 w-3.5" /> Restore
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerList>
       )}
 
       <Modal open={!!resetTarget} onClose={() => setResetTarget(null)} title={`Reset password — ${resetTarget?.full_name ?? ""}`}>

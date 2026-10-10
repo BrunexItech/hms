@@ -33,6 +33,10 @@ function DashboardChrome({ children }: { children: ReactNode }) {
     if (staff) getMyOrganization().then(setOrg);
   }, [staff]);
 
+  const refreshOrg = async () => {
+    setOrg(await getMyOrganization());
+  };
+
   if (loading || !staff) return <FullPageSpinner />;
 
   const navItems: NavItem[] = [
@@ -60,7 +64,7 @@ function DashboardChrome({ children }: { children: ReactNode }) {
       }}
     >
       {org ? (
-        <BrandProvider brand={{ name: org.name, logoUrl: org.logo_url, color: org.primary_color }}>{children}</BrandProvider>
+        <BrandProvider brand={{ name: org.name, logoUrl: org.logo_url, color: org.primary_color, refresh: refreshOrg }}>{children}</BrandProvider>
       ) : (
         children
       )}

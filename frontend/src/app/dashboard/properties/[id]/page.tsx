@@ -24,6 +24,7 @@ import {
 import { Property, Unit } from "@/lib/types";
 import { ApiError } from "@/lib/api";
 import { resolveImageUrl } from "@/lib/config";
+import { FadeIn, StaggerList, StaggerItem } from "@/components/ui/motion";
 
 export default function PropertyUnitsPage({ params }: PageProps<"/dashboard/properties/[id]">) {
   const { id: propertyId } = use(params);
@@ -137,6 +138,7 @@ export default function PropertyUnitsPage({ params }: PageProps<"/dashboard/prop
         <ArrowLeft className="h-3.5 w-3.5" /> Properties
       </Link>
 
+      <FadeIn>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10 text-primary">
@@ -161,34 +163,39 @@ export default function PropertyUnitsPage({ params }: PageProps<"/dashboard/prop
           </Button>
         </div>
       </div>
+      </FadeIn>
 
       {units.length === 0 ? (
-        <Card className="flex flex-col items-center py-16 text-center">
-          <DoorOpen className="mb-3 h-8 w-8 text-muted" />
-          <p className="text-sm font-medium text-foreground">No units yet</p>
-          <p className="mt-1 text-[13px] text-muted">Add a unit to generate its resident access link.</p>
-        </Card>
+        <FadeIn>
+          <Card className="flex flex-col items-center py-16 text-center">
+            <DoorOpen className="mb-3 h-8 w-8 text-muted" />
+            <p className="text-sm font-medium text-foreground">No units yet</p>
+            <p className="mt-1 text-[13px] text-muted">Add a unit to generate its resident access link.</p>
+          </Card>
+        </FadeIn>
       ) : (
-        <div className="premium-card divide-y divide-border overflow-hidden p-0">
+        <StaggerList className="premium-card divide-y divide-border overflow-hidden p-0">
           {units.map((u) => (
-            <div key={u.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-              <span
-                className={`h-2 w-2 shrink-0 rounded-full ${u.status === "occupied" ? "bg-success" : "bg-border"}`}
-                aria-hidden
-              />
-              <p className="min-w-0 flex-1 text-[13.5px] font-medium text-foreground">{u.name}</p>
-              <Badge tone={u.status === "occupied" ? "success" : "neutral"}>{u.status}</Badge>
-              <div className="flex gap-1.5">
-                <Button variant="secondary" size="sm" onClick={() => openAccess(u)}>
-                  <QrIcon className="h-3.5 w-3.5" /> Access
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setTenantUnit(u)}>
-                  <UserPlus className="h-3.5 w-3.5" /> Tenant
-                </Button>
+            <StaggerItem key={u.id}>
+              <div className="flex flex-wrap items-center gap-3 px-4 py-3">
+                <span
+                  className={`h-2 w-2 shrink-0 rounded-full ${u.status === "occupied" ? "bg-success" : "bg-border"}`}
+                  aria-hidden
+                />
+                <p className="min-w-0 flex-1 text-[13.5px] font-medium text-foreground">{u.name}</p>
+                <Badge tone={u.status === "occupied" ? "success" : "neutral"}>{u.status}</Badge>
+                <div className="flex gap-1.5">
+                  <Button variant="secondary" size="sm" onClick={() => openAccess(u)}>
+                    <QrIcon className="h-3.5 w-3.5" /> Access
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setTenantUnit(u)}>
+                    <UserPlus className="h-3.5 w-3.5" /> Tenant
+                  </Button>
+                </div>
               </div>
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerList>
       )}
 
       {/* Edit property modal */}

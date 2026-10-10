@@ -19,6 +19,7 @@ import {
 } from "@/lib/endpoints";
 import { Property, RentInvoice, RentInvoiceStatus, Unit } from "@/lib/types";
 import { ApiError } from "@/lib/api";
+import { FadeIn, StaggerList, StaggerItem } from "@/components/ui/motion";
 
 const statusTone: Record<RentInvoiceStatus, "warning" | "success" | "danger" | "primary"> = {
   pending: "warning",
@@ -122,13 +123,15 @@ export default function RentPage() {
       </div>
 
       {invoices.length === 0 ? (
-        <Card className="flex flex-col items-center py-16 text-center">
-          <Wallet className="mb-3 h-8 w-8 text-muted" />
-          <p className="text-sm font-medium text-foreground">No rent invoices yet</p>
-        </Card>
+        <FadeIn>
+          <Card className="flex flex-col items-center py-16 text-center">
+            <Wallet className="mb-3 h-8 w-8 text-muted" />
+            <p className="text-sm font-medium text-foreground">No rent invoices yet</p>
+          </Card>
+        </FadeIn>
       ) : (
         <>
-        <div className="hidden overflow-x-auto premium-card p-0 sm:block">
+        <FadeIn className="hidden overflow-x-auto premium-card p-0 sm:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted">
@@ -169,33 +172,35 @@ export default function RentPage() {
               ))}
             </tbody>
           </table>
-        </div>
-        <div className="space-y-2 sm:hidden">
+        </FadeIn>
+        <StaggerList className="space-y-2 sm:hidden">
           {invoices.map((inv) => (
-            <Card key={inv.id} className="p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-[13.5px] font-semibold text-foreground">{inv.property_name} · {inv.unit_name}</p>
-                  <p className="text-[12px] text-muted">{inv.tenant_name}</p>
+            <StaggerItem key={inv.id}>
+              <Card className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[13.5px] font-semibold text-foreground">{inv.property_name} · {inv.unit_name}</p>
+                    <p className="text-[12px] text-muted">{inv.tenant_name}</p>
+                  </div>
+                  <Badge tone={statusTone[inv.status]}>{inv.status.replace("_", " ")}</Badge>
                 </div>
-                <Badge tone={statusTone[inv.status]}>{inv.status.replace("_", " ")}</Badge>
-              </div>
-              <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[12px]">
-                <dt className="text-muted">Period</dt>
-                <dd className="whitespace-nowrap text-right text-foreground">{inv.period_start} – {inv.period_end}</dd>
-                <dt className="text-muted">Due</dt>
-                <dd className="text-right text-foreground">{inv.due_date}</dd>
-                <dt className="text-muted">Paid</dt>
-                <dd className="text-right font-medium tabular-nums text-foreground">{inv.total_paid.toLocaleString()} / {inv.amount_due.toLocaleString()}</dd>
-              </dl>
-              {inv.status !== "paid" && (
-                <Button size="sm" variant="outline" className="mt-3 w-full" onClick={() => setPaymentTarget(inv)}>
-                  <Banknote className="h-3.5 w-3.5" /> Record payment
-                </Button>
-              )}
-            </Card>
+                <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[12px]">
+                  <dt className="text-muted">Period</dt>
+                  <dd className="whitespace-nowrap text-right text-foreground">{inv.period_start} – {inv.period_end}</dd>
+                  <dt className="text-muted">Due</dt>
+                  <dd className="text-right text-foreground">{inv.due_date}</dd>
+                  <dt className="text-muted">Paid</dt>
+                  <dd className="text-right font-medium tabular-nums text-foreground">{inv.total_paid.toLocaleString()} / {inv.amount_due.toLocaleString()}</dd>
+                </dl>
+                {inv.status !== "paid" && (
+                  <Button size="sm" variant="outline" className="mt-3 w-full" onClick={() => setPaymentTarget(inv)}>
+                    <Banknote className="h-3.5 w-3.5" /> Record payment
+                  </Button>
+                )}
+              </Card>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerList>
         </>
       )}
 

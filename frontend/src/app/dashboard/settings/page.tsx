@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Palette } from "lucide-react";
+import { Palette, Check } from "lucide-react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
@@ -13,16 +13,20 @@ import { Organization } from "@/lib/types";
 import { ApiError } from "@/lib/api";
 import { resolveImageUrl } from "@/lib/config";
 import { ChangePasswordCard } from "@/components/change-password-card";
+import { FadeIn } from "@/components/ui/motion";
+import { useBrand } from "@/lib/brand-context";
 
 const PRESET_COLORS = ["#7C3AED", "#4F46E5", "#0EA5E9", "#10B981", "#F59E0B", "#EF4444", "#EC4899"];
 
 export default function SettingsPage() {
   const { notify } = useToast();
+  const brand = useBrand();
   const [org, setOrg] = useState<Organization | null>(null);
   const [name, setName] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [color, setColor] = useState("#7C3AED");
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     getMyOrganization().then((o) => {
@@ -39,10 +43,9 @@ export default function SettingsPage() {
     try {
       await updateMyOrganization({ name, logo_url: logoUrl ?? "", primary_color: color });
       notify("Branding updated");
-      // The sidebar (in the layout above this page) only fetches branding
-      // once on load — reload so it picks up the change immediately.
-      window.location.reload();
-      return;
+      await brand?.refresh?.();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
     } catch (err) {
       notify(err instanceof ApiError ? err.message : "Failed to save settings", "error");
     } finally {
@@ -57,6 +60,7 @@ export default function SettingsPage() {
       <h1 className="text-[15px] font-semibold text-foreground">Settings</h1>
       <p className="mb-4 text-[13px] text-muted">Customize your business identity across the platform.</p>
 
+      <FadeIn>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -99,7 +103,7 @@ export default function SettingsPage() {
             <div className="flex items-center gap-3">
               <div
                 className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl text-white shadow"
-                style={{ background: color }}
+                style={{ background: color, boxShadow: `0 0 0 2px ${color}` }}
               >
                 {logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -116,10 +120,17 @@ export default function SettingsPage() {
           </div>
 
           <Button type="submit" loading={saving}>
-            Save changes
+            {saved ? (
+              <>
+                <Check className="h-4 w-4" /> Saved
+              </>
+            ) : (
+              "Save changes"
+            )}
           </Button>
         </form>
       </Card>
+      </FadeIn>
 
       <div className="mt-5">
         <ChangePasswordCard />

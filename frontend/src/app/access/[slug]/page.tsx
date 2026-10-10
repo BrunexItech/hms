@@ -9,6 +9,7 @@ import { FullPageSpinner } from "@/components/ui/spinner";
 import { getUnitAccessInfo, requestTenantAccessLink } from "@/lib/endpoints";
 import { UnitAccessInfo } from "@/lib/types";
 import { resolveImageUrl } from "@/lib/config";
+import { FadeIn } from "@/components/ui/motion";
 
 export default function TenantAccessPage({ params }: PageProps<"/access/[slug]">) {
   const { slug } = use(params);
@@ -57,6 +58,7 @@ export default function TenantAccessPage({ params }: PageProps<"/access/[slug]">
       </header>
       <main className="flex flex-1 items-center justify-center px-6 py-10">
         <div className="w-full max-w-sm">
+          <FadeIn>
           <div className={`text-center ${info.property_photo_url ? "mb-12" : "mb-8"}`}>
             {info.property_photo_url ? (
               <div className="relative mb-8">
@@ -69,8 +71,11 @@ export default function TenantAccessPage({ params }: PageProps<"/access/[slug]">
                   />
                 </div>
                 <div
-                  className="absolute -bottom-7 left-1/2 flex h-14 w-14 -translate-x-1/2 items-center justify-center overflow-hidden rounded-2xl text-white shadow-md ring-4 ring-background"
-                  style={{ background: info.organization_primary_color }}
+                  className="absolute -bottom-7 left-1/2 flex h-14 w-14 -translate-x-1/2 items-center justify-center overflow-hidden rounded-2xl text-white shadow-md"
+                  style={{
+                    background: info.organization_primary_color,
+                    boxShadow: `0 0 0 4px var(--background), 0 0 0 7px ${info.organization_primary_color}`,
+                  }}
                 >
                   {info.organization_logo_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -87,7 +92,7 @@ export default function TenantAccessPage({ params }: PageProps<"/access/[slug]">
             ) : (
               <div
                 className="mx-auto mb-4 flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl text-white shadow-md"
-                style={{ background: info.organization_primary_color }}
+                style={{ background: info.organization_primary_color, boxShadow: `0 0 0 2px ${info.organization_primary_color}` }}
               >
                 {info.organization_logo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -154,6 +159,7 @@ export default function TenantAccessPage({ params }: PageProps<"/access/[slug]">
               </form>
             )}
           </div>
+          </FadeIn>
         </div>
       </main>
     </div>

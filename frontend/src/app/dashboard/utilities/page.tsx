@@ -12,6 +12,7 @@ import { useToast } from "@/components/ui/toast";
 import { createUtilityBill, listAllUnits, listStaffUtilityBills, updateUtilityBillStatus } from "@/lib/endpoints";
 import { UtilityBill, UtilityBillStatus, Unit } from "@/lib/types";
 import { ApiError } from "@/lib/api";
+import { FadeIn, StaggerList, StaggerItem } from "@/components/ui/motion";
 
 const statusTone: Record<UtilityBillStatus, "warning" | "success" | "danger"> = {
   pending: "warning",
@@ -81,13 +82,15 @@ export default function UtilitiesPage() {
       </div>
 
       {bills.length === 0 ? (
-        <Card className="flex flex-col items-center py-16 text-center">
-          <Receipt className="mb-3 h-8 w-8 text-muted" />
-          <p className="text-sm font-medium text-foreground">No bills yet</p>
-        </Card>
+        <FadeIn>
+          <Card className="flex flex-col items-center py-16 text-center">
+            <Receipt className="mb-3 h-8 w-8 text-muted" />
+            <p className="text-sm font-medium text-foreground">No bills yet</p>
+          </Card>
+        </FadeIn>
       ) : (
         <>
-        <div className="hidden overflow-x-auto premium-card p-0 sm:block">
+        <FadeIn className="hidden overflow-x-auto premium-card p-0 sm:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted">
@@ -128,27 +131,29 @@ export default function UtilitiesPage() {
               ))}
             </tbody>
           </table>
-        </div>
-        <div className="space-y-2 sm:hidden">
+        </FadeIn>
+        <StaggerList className="space-y-2 sm:hidden">
           {bills.map((b) => (
-            <Card key={b.id} className="p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-[13.5px] font-semibold capitalize text-foreground">{b.utility_type}</p>
-                  <p className="text-[12px] text-muted">{b.property_name} · {b.unit_name}</p>
+            <StaggerItem key={b.id}>
+              <Card className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[13.5px] font-semibold capitalize text-foreground">{b.utility_type}</p>
+                    <p className="text-[12px] text-muted">{b.property_name} · {b.unit_name}</p>
+                  </div>
+                  <Badge tone={statusTone[b.status]}>{b.status}</Badge>
                 </div>
-                <Badge tone={statusTone[b.status]}>{b.status}</Badge>
-              </div>
-              <div className="mt-3 flex items-center justify-between text-[12px]">
-                <span className="text-muted">{b.period_start} – {b.period_end}</span>
-                <span className="text-[13.5px] font-semibold tabular-nums text-foreground">{b.amount.toLocaleString()}</span>
-              </div>
-              <Button size="sm" variant={b.status === "paid" ? "ghost" : "outline"} className="mt-3 w-full" onClick={() => handleStatus(b, b.status === "paid" ? "pending" : "paid")}>
-                {b.status === "paid" ? "Undo" : "Mark paid"}
-              </Button>
-            </Card>
+                <div className="mt-3 flex items-center justify-between text-[12px]">
+                  <span className="text-muted">{b.period_start} – {b.period_end}</span>
+                  <span className="text-[13.5px] font-semibold tabular-nums text-foreground">{b.amount.toLocaleString()}</span>
+                </div>
+                <Button size="sm" variant={b.status === "paid" ? "ghost" : "outline"} className="mt-3 w-full" onClick={() => handleStatus(b, b.status === "paid" ? "pending" : "paid")}>
+                  {b.status === "paid" ? "Undo" : "Mark paid"}
+                </Button>
+              </Card>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerList>
         </>
       )}
 

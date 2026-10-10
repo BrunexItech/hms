@@ -8,7 +8,11 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 export function Card({ className, interactive, ...props }: CardProps) {
   return (
     <div
-      className={clsx("premium-card p-5", interactive && "premium-card-interactive cursor-pointer", className)}
+      className={clsx(
+        "premium-card p-5 transition-transform duration-150",
+        interactive && "premium-card-interactive cursor-pointer hover:-translate-y-0.5",
+        className
+      )}
       {...props}
     />
   );

@@ -12,6 +12,7 @@ import { useToast } from "@/components/ui/toast";
 import { createTenantComplaint, listTenantComplaints } from "@/lib/endpoints";
 import { Complaint, ComplaintStatus } from "@/lib/types";
 import { ApiError } from "@/lib/api";
+import { FadeIn, StaggerList, StaggerItem } from "@/components/ui/motion";
 
 const statusTone: Record<ComplaintStatus, "warning" | "primary" | "success" | "neutral"> = {
   open: "warning",
@@ -63,23 +64,27 @@ export default function TenantComplaintsPage() {
       </div>
 
       {complaints.length === 0 ? (
-        <Card className="flex flex-col items-center py-16 text-center">
-          <MessageSquareWarning className="mb-3 h-8 w-8 text-muted" />
-          <p className="text-sm font-medium text-foreground">No complaints yet</p>
-        </Card>
+        <FadeIn>
+          <Card className="flex flex-col items-center py-16 text-center">
+            <MessageSquareWarning className="mb-3 h-8 w-8 text-muted" />
+            <p className="text-sm font-medium text-foreground">No complaints yet</p>
+          </Card>
+        </FadeIn>
       ) : (
-        <div className="space-y-2">
+        <StaggerList className="space-y-2">
           {complaints.map((c) => (
-            <Card key={c.id} className="p-4">
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <p className="text-[13.5px] font-semibold text-foreground">{c.subject}</p>
-                <Badge tone={statusTone[c.status]}>{c.status.replace("_", " ")}</Badge>
-              </div>
-              <p className="text-[13px] text-muted">{c.description}</p>
-              <p className="mt-1.5 text-[12px] text-muted">{new Date(c.created_at).toLocaleDateString()}</p>
-            </Card>
+            <StaggerItem key={c.id}>
+              <Card className="p-4">
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <p className="text-[13.5px] font-semibold text-foreground">{c.subject}</p>
+                  <Badge tone={statusTone[c.status]}>{c.status.replace("_", " ")}</Badge>
+                </div>
+                <p className="text-[13px] text-muted">{c.description}</p>
+                <p className="mt-1.5 text-[12px] text-muted">{new Date(c.created_at).toLocaleDateString()}</p>
+              </Card>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerList>
       )}
 
       <Modal open={open} onClose={() => setOpen(false)} title="New complaint">

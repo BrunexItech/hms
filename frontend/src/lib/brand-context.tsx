@@ -6,6 +6,7 @@ interface Brand {
   name: string;
   logoUrl: string | null;
   color: string;
+  refresh?: () => Promise<void> | void;
 }
 
 const BrandContext = createContext<Brand | null>(null);

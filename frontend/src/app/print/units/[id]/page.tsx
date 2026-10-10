@@ -38,7 +38,7 @@ export default function PrintUnitAccessPage({ params }: PageProps<"/print/units/
       <div className="flex w-full max-w-sm flex-col items-center rounded-2xl border border-border bg-surface p-10 text-center shadow-sm print:border-2 print:border-black print:shadow-none">
         <div
           className="mb-5 flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl text-white"
-          style={{ background: info.organization_primary_color }}
+          style={{ background: info.organization_primary_color, boxShadow: `0 0 0 2px ${info.organization_primary_color}` }}
         >
           {info.organization_logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element

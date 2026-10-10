@@ -60,7 +60,7 @@ export default function PropertiesPage() {
   return (
     <div>
       <div className="mb-5 flex items-center justify-between gap-3">
-        <h1 className="text-[15px] font-semibold text-foreground">Properties</h1>
+        <h1 className="font-display text-2xl font-semibold text-foreground">Properties</h1>
         <Button size="sm" onClick={() => setOpen(true)}>
           <Plus className="h-3.5 w-3.5" /> New property
         </Button>

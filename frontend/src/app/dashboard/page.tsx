@@ -112,8 +112,11 @@ export default function DashboardOverview() {
         ) : (
           brand && (
             <div
-              className="mb-5 flex items-center gap-4 overflow-hidden rounded-2xl p-6 text-white shadow-md sm:p-7"
-              style={{ background: `linear-gradient(135deg, ${brand.color}, color-mix(in srgb, ${brand.color} 55%, black))` }}
+              className="relative mb-5 flex items-center gap-4 overflow-hidden rounded-2xl p-6 text-white shadow-md sm:p-7"
+              style={{
+                backgroundImage: `linear-gradient(135deg, ${brand.color}, color-mix(in srgb, ${brand.color} 55%, black)), linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)`,
+                backgroundSize: "auto, 34px 34px, 34px 34px",
+              }}
             >
               <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/15 shadow-inner backdrop-blur-sm sm:h-16 sm:w-16">
                 {brand.logoUrl ? (
@@ -169,7 +172,7 @@ export default function DashboardOverview() {
           <div className="mb-8">
             <p className="mb-2 text-[13px] font-medium uppercase tracking-wide text-muted">{verdict.label}</p>
             <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-              <p className="font-display text-[56px] font-bold leading-none tracking-tight text-foreground sm:text-[72px]">
+              <p className="font-mono text-[56px] font-bold leading-none tracking-tight text-foreground sm:text-[72px]">
                 {verdict.format === "currency" ? (
                   <CountUp value={Math.round(verdict.value)} prefix="" duration={1} />
                 ) : (
@@ -192,7 +195,7 @@ export default function DashboardOverview() {
                 style={{ borderLeft: i === 0 ? "none" : "1px solid var(--border)" }}
               >
                 <p className="mb-1.5 text-[12.5px] text-muted">{m.label}</p>
-                <p className="font-display text-[26px] font-bold leading-none tracking-tight" style={{ color: toneColor[m.tone ?? "default"] }}>
+                <p className="font-mono text-[26px] font-bold leading-none tracking-tight" style={{ color: toneColor[m.tone ?? "default"] }}>
                   <CountUp value={m.value} suffix={m.suffix ?? ""} duration={0.8} />
                 </p>
                 {m.hint && <p className="mt-1 text-[11.5px] text-muted">{m.hint}</p>}

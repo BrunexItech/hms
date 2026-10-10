@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Fraunces, Manrope, JetBrains_Mono } from "next/font/google";
 import { History, LayoutDashboard, Settings, Users2 } from "lucide-react";
 import { AppShell, NavItem } from "@/components/shell/app-shell";
 import { FullPageSpinner } from "@/components/ui/spinner";
@@ -10,6 +11,22 @@ import { resolveIcon } from "@/lib/icon-map";
 import { getMyOrganization, staffLogout } from "@/lib/endpoints";
 import { Organization } from "@/lib/types";
 import { BrandProvider } from "@/lib/brand-context";
+
+const fraunces = Fraunces({
+  variable: "--font-dash-display",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+});
+const manrope = Manrope({
+  variable: "--font-dash-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-dash-mono",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+});
 
 const MODULE_ROUTES: Record<string, string> = {
   properties: "/dashboard/properties",
@@ -74,8 +91,10 @@ function DashboardChrome({ children }: { children: ReactNode }) {
 
 export default function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
   return (
-    <StaffSessionProvider>
-      <DashboardChrome>{children}</DashboardChrome>
-    </StaffSessionProvider>
+    <div className={`${fraunces.variable} ${manrope.variable} ${jetbrainsMono.variable} dash-theme min-h-screen`}>
+      <StaffSessionProvider>
+        <DashboardChrome>{children}</DashboardChrome>
+      </StaffSessionProvider>
+    </div>
   );
 }

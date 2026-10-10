@@ -75,19 +75,18 @@ export default function Home() {
         <section className="relative overflow-hidden">
           <div className="relative flex min-h-[640px] items-center overflow-hidden sm:min-h-[720px]">
             <ProgressiveImage
+              fill
               src="/images/hero-villa.jpg"
               alt="A modern property managed on HMS"
-              className="absolute inset-0 h-full w-full"
               imgClassName="h-full w-full object-cover"
             />
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(125deg, color-mix(in srgb, var(--info) 78%, black) 0%, color-mix(in srgb, var(--primary-2) 55%, transparent) 45%, transparent 75%)",
-              }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10" />
+            {/* An even photographic scrim, not a directional color wipe — the
+                photo should read as one full image, with just enough
+                darkening everywhere for the centered white text to stay
+                legible. A diagonal tinted gradient here previously made the
+                right half of the photo disappear into flat color. */}
+            <div className="absolute inset-0 bg-black/35" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/15" />
 
             <div className="relative z-10 mx-auto w-full max-w-4xl px-6 pt-10 text-center">
               <FadeIn>

@@ -56,19 +56,13 @@ export default function LoginPage() {
       {/* Photo side — hidden on small screens to keep the form the focus on mobile */}
       <div className="relative hidden w-1/2 overflow-hidden lg:block">
         <ProgressiveImage
+          fill
           src="/images/hero-villa.jpg"
           alt="A property managed on HMS"
-          className="absolute inset-0 h-full w-full"
           imgClassName="h-full w-full object-cover"
         />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(160deg, color-mix(in srgb, var(--info) 75%, black) 0%, color-mix(in srgb, var(--primary-2) 50%, transparent) 55%, transparent 85%)",
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/10" />
+        <div className="absolute inset-0 bg-black/30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/20" />
         <div className="relative flex h-full flex-col justify-between p-10 text-white">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">

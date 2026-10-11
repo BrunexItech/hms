@@ -5,14 +5,14 @@ import Link from "next/link";
 import { Building2, Plus, UserPlus, Banknote, ArrowRight } from "lucide-react";
 import { BarTrendChart } from "@/components/ui/bar-trend-chart";
 import { FullPageSpinner } from "@/components/ui/spinner";
-import { getDashboardSummary, listProperties } from "@/lib/endpoints";
-import { DashboardSummary } from "@/lib/types";
+import { getDashboardSummary, listProperties, listStaffRentInvoices, listStaffComplaints } from "@/lib/endpoints";
+import { DashboardSummary, RentInvoice, Complaint } from "@/lib/types";
 import { useBrand } from "@/lib/brand-context";
 import { resolveImageUrl } from "@/lib/config";
 import { FadeIn, StaggerList, StaggerItem, CountUp } from "@/components/ui/motion";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 
-interface Metric {
+interface StatCard {
   label: string;
   value: number;
   suffix?: string;
@@ -21,13 +21,47 @@ interface Metric {
   format?: "number" | "currency";
 }
 
+interface AttentionItem {
+  id: string;
+  initials: string;
+  name: string;
+  sub: string;
+  badge: string;
+  tone: "warning" | "danger";
+  href: string;
+}
+
+function initialsOf(name: string) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
 export default function DashboardOverview() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [heroPhoto, setHeroPhoto] = useState<string | null>(null);
+  const [overdueInvoices, setOverdueInvoices] = useState<RentInvoice[]>([]);
+  const [openComplaints, setOpenComplaints] = useState<Complaint[]>([]);
   const brand = useBrand();
 
   useEffect(() => {
-    getDashboardSummary().then(setSummary);
+    getDashboardSummary().then((s) => {
+      setSummary(s);
+      if (s.rent_enabled) {
+        listStaffRentInvoices()
+          .then((invoices) => setOverdueInvoices(invoices.filter((i) => i.status === "overdue")))
+          .catch(() => setOverdueInvoices([]));
+      }
+      if (s.complaints_enabled) {
+        listStaffComplaints()
+          .then((complaints) => setOpenComplaints(complaints.filter((c) => c.status === "open" || c.status === "in_progress")))
+          .catch(() => setOpenComplaints([]));
+      }
+    });
     listProperties()
       .then((props) => setHeroPhoto(props.find((p) => p.photo_url)?.photo_url ?? null))
       .catch(() => setHeroPhoto(null));
@@ -39,35 +73,35 @@ export default function DashboardOverview() {
     ? `${summary.total_properties ?? 0} propert${(summary.total_properties ?? 0) === 1 ? "y" : "ies"} · ${summary.occupancy_rate ?? 0}% occupied`
     : "Welcome back";
 
-  // The one number that answers "how am I doing" — rent collected is the
-  // most meaningful single figure for a landlord when it's on; otherwise
-  // occupancy stands in as the verdict.
-  const verdict = summary.rent_enabled
-    ? {
-        label: "Rent collected this month",
-        value: summary.rent_collected_this_month ?? 0,
-        format: "currency" as const,
-        detail: `of ${(summary.rent_due_this_month ?? 0).toLocaleString()} due · ${
-          summary.rent_due_this_month ? Math.round(((summary.rent_collected_this_month ?? 0) / summary.rent_due_this_month) * 100) : 0
-        }% collection rate`,
-      }
-    : summary.properties_enabled
-      ? {
-          label: "Occupancy",
-          value: summary.occupancy_rate ?? 0,
-          format: "number" as const,
-          detail: `${summary.occupied_units ?? 0} of ${summary.total_units ?? 0} units occupied`,
-        }
-      : null;
-
-  const metrics: Metric[] = [
+  const stats: StatCard[] = [
     ...(summary.properties_enabled
-      ? [{ label: "Occupancy", value: summary.occupancy_rate ?? 0, suffix: "%", hint: `${summary.occupied_units}/${summary.total_units} units` }]
+      ? [{ label: "Properties", value: summary.total_properties ?? 0, hint: `${summary.total_units ?? 0} units total` }]
+      : []),
+    ...(summary.properties_enabled
+      ? [{ label: "Occupancy", value: summary.occupancy_rate ?? 0, suffix: "%", hint: `${summary.occupied_units ?? 0}/${summary.total_units ?? 0} occupied` }]
+      : []),
+    ...(summary.rent_enabled
+      ? [
+          {
+            label: "Rent collected",
+            value: summary.rent_collected_this_month ?? 0,
+            format: "currency" as const,
+            hint: `of ${(summary.rent_due_this_month ?? 0).toLocaleString()} due`,
+          },
+        ]
+      : []),
+    ...(summary.rent_enabled
+      ? [
+          {
+            label: "Rent outstanding",
+            value: summary.rent_outstanding ?? 0,
+            format: "currency" as const,
+            tone: "danger" as const,
+            hint: overdueInvoices.length ? `${overdueInvoices.length} overdue invoice${overdueInvoices.length === 1 ? "" : "s"}` : undefined,
+          },
+        ]
       : []),
     ...(summary.tenants_enabled ? [{ label: "Active residents", value: summary.active_tenants ?? 0 }] : []),
-    ...(summary.rent_enabled
-      ? [{ label: "Rent outstanding", value: summary.rent_outstanding ?? 0, format: "currency" as const, tone: "danger" as const }]
-      : []),
     ...(summary.utilities_enabled
       ? [{ label: "Utilities outstanding", value: summary.utilities_outstanding ?? 0, format: "currency" as const, tone: "warning" as const }]
       : []),
@@ -78,6 +112,28 @@ export default function DashboardOverview() {
   ];
 
   const toneColor = { default: "var(--foreground)", warning: "var(--warning)", danger: "var(--danger)" };
+  const toneBadgeClass = { danger: "bg-danger-bg text-danger", warning: "bg-warning-bg text-warning" };
+
+  const attention: AttentionItem[] = [
+    ...overdueInvoices.map((inv) => ({
+      id: `inv-${inv.id}`,
+      initials: initialsOf(inv.tenant_name),
+      name: inv.tenant_name,
+      sub: `${inv.property_name} · ${inv.unit_name}`,
+      badge: "Overdue",
+      tone: "danger" as const,
+      href: "/dashboard/rent",
+    })),
+    ...openComplaints.map((c) => ({
+      id: `cx-${c.id}`,
+      initials: initialsOf(c.tenant_name ?? c.subject),
+      name: c.tenant_name ?? c.subject,
+      sub: c.tenant_name ? c.subject : (c.unit_name ?? "General"),
+      badge: c.status === "open" ? "Open" : "In progress",
+      tone: "warning" as const,
+      href: "/dashboard/complaints",
+    })),
+  ].slice(0, 6);
 
   return (
     <div>
@@ -137,7 +193,7 @@ export default function DashboardOverview() {
 
       {(summary.properties_enabled || summary.tenants_enabled || summary.rent_enabled) && (
         <FadeIn delay={0.05}>
-          <div className="mb-8 flex flex-wrap gap-2.5">
+          <div className="mb-7 flex flex-wrap gap-2.5">
             {summary.properties_enabled && (
               <Link
                 href="/dashboard/properties"
@@ -166,66 +222,90 @@ export default function DashboardOverview() {
         </FadeIn>
       )}
 
-      {/* The verdict: one confident number, not a card */}
-      {verdict && (
-        <FadeIn delay={0.08}>
-          <div className="mb-8">
-            <p className="mb-2 text-[13px] font-medium uppercase tracking-wide text-muted">{verdict.label}</p>
-            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-              <p className="font-mono text-[56px] font-bold leading-none tracking-tight text-foreground sm:text-[72px]">
-                {verdict.format === "currency" ? (
-                  <CountUp value={Math.round(verdict.value)} prefix="" duration={1} />
-                ) : (
-                  <CountUp value={Math.round(verdict.value)} suffix="%" duration={1} />
-                )}
-              </p>
-              <p className="pb-2 text-[14px] text-muted">{verdict.detail}</p>
-            </div>
-          </div>
-        </FadeIn>
-      )}
-
-      {/* Secondary metrics: a hairline-divided row, no boxes, no icons */}
-      {metrics.length > 0 && (
-        <StaggerList className="mb-10 flex flex-wrap border-y border-border">
-          {metrics.map((m, i) => (
-            <StaggerItem key={m.label}>
-              <div
-                className="min-w-[160px] flex-1 px-5 py-5 first:pl-0"
-                style={{ borderLeft: i === 0 ? "none" : "1px solid var(--border)" }}
-              >
-                <p className="mb-1.5 text-[12.5px] text-muted">{m.label}</p>
-                <p className="font-mono text-[26px] font-bold leading-none tracking-tight" style={{ color: toneColor[m.tone ?? "default"] }}>
-                  <CountUp value={m.value} suffix={m.suffix ?? ""} duration={0.8} />
+      {/* Real stat cards — bordered boxes, mono figures, no icon badges */}
+      {stats.length > 0 && (
+        <StaggerList className="mb-7 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {stats.map((s) => (
+            <StaggerItem key={s.label}>
+              <div className="premium-card h-full px-5 py-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">{s.label}</p>
+                <p className="mt-2 font-mono text-[24px] font-bold leading-none tracking-tight" style={{ color: toneColor[s.tone ?? "default"] }}>
+                  {s.format === "currency" ? (
+                    <CountUp value={Math.round(s.value)} duration={0.8} />
+                  ) : (
+                    <CountUp value={Math.round(s.value)} suffix={s.suffix ?? ""} duration={0.8} />
+                  )}
                 </p>
-                {m.hint && <p className="mt-1 text-[11.5px] text-muted">{m.hint}</p>}
+                {s.hint && <p className="mt-1.5 text-[11.5px] text-muted">{s.hint}</p>}
               </div>
             </StaggerItem>
           ))}
         </StaggerList>
       )}
 
-      {summary.rent_enabled && summary.monthly_revenue && (
-        <FadeIn>
-          <div className="premium-card overflow-hidden">
-            <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-success">Revenue</p>
-                <h3 className="text-base font-semibold text-foreground">Rent collected, last 6 months</h3>
+      {/* Two-column body: revenue chart + a real, data-driven attention list */}
+      <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+        {summary.rent_enabled && summary.monthly_revenue && (
+          <FadeIn>
+            <div className="premium-card overflow-hidden">
+              <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-success">Revenue</p>
+                  <h3 className="font-display text-base font-semibold text-foreground">Rent collected, last 6 months</h3>
+                </div>
+                <Link
+                  href="/dashboard/rent"
+                  className="inline-flex items-center gap-1 text-[13px] font-semibold text-primary transition-opacity hover:opacity-80"
+                >
+                  View all <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
               </div>
-              <Link
-                href="/dashboard/rent"
-                className="inline-flex items-center gap-1 text-[13px] font-semibold text-primary transition-opacity hover:opacity-80"
-              >
-                View all <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+              <div className="p-5">
+                <BarTrendChart data={summary.monthly_revenue} />
+              </div>
             </div>
-            <div className="p-5">
-              <BarTrendChart data={summary.monthly_revenue} />
+          </FadeIn>
+        )}
+
+        {(summary.rent_enabled || summary.complaints_enabled) && (
+          <FadeIn delay={0.05}>
+            <div className="premium-card overflow-hidden">
+              <div className="border-b border-border px-5 py-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted">Needs attention</p>
+                <h3 className="font-display text-base font-semibold text-foreground">Overdue rent &amp; open complaints</h3>
+              </div>
+              <div className="px-5">
+                {attention.length === 0 ? (
+                  <p className="py-8 text-center text-[13px] text-muted">Nothing needs attention right now.</p>
+                ) : (
+                  attention.map((item, i) => (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      className="flex items-center justify-between gap-3 py-3 transition-opacity hover:opacity-70"
+                      style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-[12px] font-bold text-foreground">
+                          {item.initials}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-[13.5px] font-semibold text-foreground">{item.name}</p>
+                          <p className="truncate text-[11.5px] text-muted">{item.sub}</p>
+                        </div>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wide ${toneBadgeClass[item.tone]}`}>
+                        {item.badge}
+                      </span>
+                    </Link>
+                  ))
+                )}
+              </div>
+              <div className="h-2" />
             </div>
-          </div>
-        </FadeIn>
-      )}
+          </FadeIn>
+        )}
+      </div>
     </div>
   );
 }

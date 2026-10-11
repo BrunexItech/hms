@@ -77,15 +77,15 @@ export function AppShell({
               href={item.href}
               onClick={() => setMobileOpen(false)}
               className={clsx(
-                "flex items-center gap-2.5 rounded-lg border-l-2 px-2.5 py-1.5 text-[13px] font-medium transition-all duration-150",
-                !active && "border-transparent text-muted hover:bg-surface-2 hover:text-foreground"
+                "flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all duration-150",
+                !active && "text-muted hover:bg-surface-2 hover:text-foreground"
               )}
               style={
                 active
                   ? {
-                      borderLeftColor: brandColor ?? "var(--primary)",
-                      background: `color-mix(in srgb, ${brandColor ?? "var(--primary)"} 14%, transparent)`,
-                      color: brandColor ?? "var(--primary)",
+                      background: brandColor ?? "var(--info)",
+                      color: "#ffffff",
+                      boxShadow: `0 1px 2px color-mix(in srgb, ${brandColor ?? "var(--info)"} 35%, transparent)`,
                     }
                   : undefined
               }
